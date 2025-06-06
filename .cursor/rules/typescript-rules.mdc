@@ -1,0 +1,18 @@
+---
+description:
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+- always use single quotes
+- always use arrow functions.
+- Interfaces and other types should get their own files. One interface per file and the name should always be prefixed with "I"
+- The interface in a file should always use only the default export
+- Use Typescript operators and 'extend' to reduce code duplication
+- If a certain type will apply to multiple situations it should be named generically instead of creating duplicate types with specific names
+- When there are a group of related strings an enum should be created as a constant for the strings. Only one enum per file.
+- Enums should have a title cased name while its cases should be uppercase snakecase.
+- object keys, interface keys, and enum cases should always be alphabetically sorted
+- when writing tests a 'tests' folder should be created in the directory that contains the files to be tested
+- utilize test utilites for common set up between test suites. they should be placed in a 'test-utilities' directory in the root
+- prefer default exports
+- always use 4 space tabs

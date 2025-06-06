@@ -1,0 +1,15 @@
+---
+description:
+globs: *.tsx,*.jsx,*.ts,*.js
+alwaysApply: false
+---
+- always use arrow functions.
+- component prop types should be declared using FC with the component specific props passed to FC as a generic
+- context is preferred when any type of prop needs to be passed down further than one child component deep
+- context should be separated in the same way that Redux slices would be separated
+- always destructure component props inside the body of the component
+- always use useCallback for callbacks passed to components
+- custom hooks should always be in their own file. one hook per file. they should have an interface that describes the values they return
+- prop declaration on components should always be alphabetically sorted
+- Jest is the preferred testing platform along with @react-testing-library. Never suggest snapshot testing.
+- react should always be the first import when importing react
