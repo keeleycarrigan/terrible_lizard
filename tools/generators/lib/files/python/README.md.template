@@ -1,0 +1,105 @@
+# <%= name %>
+
+<% if (description) { %><%= description %><% } else { %>A Python library providing reusable functionality for the Terrible Lizard monorepo.<% } %>
+
+## Installation
+
+This library is part of the Terrible Lizard monorepo. To use it in another project within the monorepo:
+
+```bash
+# For development dependencies
+poetry add --group dev --path ../../../libs/<%= name %>
+
+# For production dependencies
+poetry add --path ../../../libs/<%= name %>
+```
+
+## Usage
+
+```python
+from <%= moduleName %> import <%= className %>
+
+# Create an instance
+processor = <%= className %>(name="my_processor")
+
+# Process some data
+result = processor.process({"input": "data"})
+print(result)
+
+# Get instance information
+info = processor.get_info()
+print(f"Library version: {info['version']}")
+```
+
+### Convenience Functions
+
+```python
+from <%= moduleName %>.<%= fileName %> import create_<%= fileName %>, quick_process
+
+# Create with configuration
+processor = create_<%= fileName %>(name="configured", config={"debug": True})
+
+# Quick one-off processing
+result = quick_process({"quick": "data"})
+```
+
+## API Reference
+
+### <%= className %>
+
+Main class providing the core functionality.
+
+#### Methods
+
+- `__init__(name: str = "<%= name %>", config: Optional[Dict[str, Any]] = None)`
+  - Initialize a new instance
+- `process(data: Any) -> Any`
+  - Process input data and return the result
+- `get_info() -> Dict[str, Any]`
+  - Get information about this library instance
+
+#### Convenience Functions
+
+- `create_<%= fileName %>(**kwargs) -> <%= className %>`
+  - Create a new instance with configuration
+- `quick_process(data: Any, name: str = "quick") -> Any`
+  - Quick utility for one-off processing
+
+## Development
+
+### Testing
+
+```bash
+# Run tests
+poetry run pytest
+
+# Run tests with coverage
+poetry run pytest --cov=<%= moduleName %> --cov-report=html
+
+# Run specific test
+poetry run pytest tests/test_<%= fileName %>.py::Test<%= className %>::test_process_returns_data
+```
+
+### Linting
+
+```bash
+# Check code style
+poetry run ruff check .
+
+# Fix auto-fixable issues
+poetry run ruff check . --fix
+
+# Format code
+poetry run black .
+```
+
+### Type Checking
+
+```bash
+# Run type checker
+poetry run mypy src/
+```
+
+## License
+
+MIT License - see the root monorepo for details.

@@ -1,0 +1,47 @@
+"""Application configuration."""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class Config:
+    """Base configuration class."""
+
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+    # Database configuration (example for future use)
+    # DATABASE_URL = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+
+    # API configuration
+    API_TITLE = '<%= projectName %> API'
+    API_VERSION = 'v1'
+
+    # CORS settings
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+
+
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    DEBUG = False
+
+
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    DEBUG = True
+
+
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}

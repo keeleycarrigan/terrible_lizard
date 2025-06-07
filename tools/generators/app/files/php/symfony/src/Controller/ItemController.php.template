@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Item;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+#[Route('/items', name: 'api_items_')]
+class ItemController extends AbstractController
+{
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
+    ) {}
+
+    #[Route('', name: 'list', methods: ['GET'])]
+    public function list(Request $request): JsonResponse
+    {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $offset = ($page - 1) * $limit;
+
+        $repository = $this->entityManager->getRepository(Item::class);
+
+        // Get items with pagination
+        $queryBuilder = $repository->createQueryBuilder('i');
+
+        // Add active filter if requested
+        if ($request->query->get('active') !== null) {
+            $queryBuilder->andWhere('i.active = :active')
+                        ->setParameter('active', $request->query->getBoolean('active'));
+        }
+
+        $queryBuilder->orderBy('i.createdAt', 'DESC')
+                    ->setFirstResult($offset)
+                    ->setMaxResults($limit);
+
+        $items = $queryBuilder->getQuery()->getResult();
+
+        // Get total count for pagination
+        $totalQuery = $repository->createQueryBuilder('i')
+                                ->select('COUNT(i.id)');
+
+        if ($request->query->get('active') !== null) {
+            $totalQuery->andWhere('i.active = :active')
+                      ->setParameter('active', $request->query->getBoolean('active'));
+        }
+
+        $total = (int) $totalQuery->getQuery()->getSingleScalarResult();
+
+        return $this->json([
+            'items' => array_map(fn(Item $item) => $item->toArray(), $items),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => (int) ceil($total / $limit)
+            ]
+        ]);
+    }
+
+    #[Route('', name: 'create', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return $this->json(['error' => 'Invalid JSON'], 400);
+        }
+
+        $item = new Item();
+        $item->setName($data['name'] ?? '');
+        $item->setDescription($data['description'] ?? null);
+        $item->setActive($data['active'] ?? true);
+
+        // Validate
+        $errors = $this->validator->validate($item);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['errors' => $errorMessages], 422);
+        }
+
+        $this->entityManager->persist($item);
+        $this->entityManager->flush();
+
+        return $this->json($item->toArray(), 201);
+    }
+
+    #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function show(int $id): JsonResponse
+    {
+        $item = $this->entityManager->getRepository(Item::class)->find($id);
+
+        if (!$item) {
+            return $this->json(['error' => 'Item not found'], 404);
+        }
+
+        return $this->json($item->toArray());
+    }
+
+    #[Route('/{id}', name: 'update', methods: ['PUT', 'PATCH'], requirements: ['id' => '\d+'])]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $item = $this->entityManager->getRepository(Item::class)->find($id);
+
+        if (!$item) {
+            return $this->json(['error' => 'Item not found'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return $this->json(['error' => 'Invalid JSON'], 400);
+        }
+
+        // Update fields if provided
+        if (isset($data['name'])) {
+            $item->setName($data['name']);
+        }
+        if (isset($data['description'])) {
+            $item->setDescription($data['description']);
+        }
+        if (isset($data['active'])) {
+            $item->setActive((bool) $data['active']);
+        }
+
+        // Validate
+        $errors = $this->validator->validate($item);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['errors' => $errorMessages], 422);
+        }
+
+        $this->entityManager->flush();
+
+        return $this->json($item->toArray());
+    }
+
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    public function delete(int $id): JsonResponse
+    {
+        $item = $this->entityManager->getRepository(Item::class)->find($id);
+
+        if (!$item) {
+            return $this->json(['error' => 'Item not found'], 404);
+        }
+
+        $this->entityManager->remove($item);
+        $this->entityManager->flush();
+
+        return $this->json(['message' => 'Item deleted successfully']);
+    }
+}

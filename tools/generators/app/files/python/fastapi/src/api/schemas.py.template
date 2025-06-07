@@ -1,0 +1,65 @@
+"""
+API Schemas
+
+Pydantic models for request/response serialization and validation.
+"""
+
+from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, Field, ConfigDict
+
+
+class BaseSchema(BaseModel):
+    """Base schema with common configuration."""
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HealthResponse(BaseSchema):
+    """Health check response schema."""
+    status: str
+    timestamp: datetime
+    version: str
+
+
+class ItemBase(BaseSchema):
+    """Base item schema."""
+    name: str = Field(..., min_length=1, max_length=255, description="Item name")
+    description: Optional[str] = Field(None, description="Item description")
+    price: Optional[int] = Field(None, ge=0, description="Item price in cents")
+    is_active: bool = Field(default=True, description="Item active status")
+
+
+class ItemCreate(ItemBase):
+    """Schema for creating an item."""
+    pass
+
+
+class ItemUpdate(BaseSchema):
+    """Schema for updating an item."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    price: Optional[int] = Field(None, ge=0)
+    is_active: Optional[bool] = None
+
+
+class ItemResponse(ItemBase):
+    """Schema for item response."""
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ItemListResponse(BaseSchema):
+    """Schema for paginated item list response."""
+    items: List[ItemResponse]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
+class ErrorResponse(BaseSchema):
+    """Error response schema."""
+    detail: str
+    error_code: Optional[str] = None

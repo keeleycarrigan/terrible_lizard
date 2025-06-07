@@ -1,0 +1,138 @@
+{
+  "name": "<%= projectName %>",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "<%= projectRoot %>/<%= name %>",
+  "tags": [<%= parsedTags.map(tag => `"${tag}"`).join(', ') %>],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath build",
+        "cwd": "<%= projectRoot %>",
+        "outputPath": "<%= projectRoot %>/build"
+      },
+      "configurations": {
+        "production": {
+          "command": "xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Release -destination 'generic/platform=iOS' -derivedDataPath build",
+          "outputPath": "<%= projectRoot %>/build/Release"
+        },
+        "simulator": {
+          "command": "xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -derivedDataPath build"
+        },
+        "device": {
+          "command": "xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath build"
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/<%= projectRoot %>"],
+      "options": {
+        "command": "xcodebuild test -project <%= name %>.xcodeproj -scheme <%= name %> -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -derivedDataPath build -enableCodeCoverage YES",
+        "cwd": "<%= projectRoot %>"
+      },
+      "configurations": {
+        "ci": {
+          "command": "xcodebuild test -project <%= name %>.xcodeproj -scheme <%= name %> -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -derivedDataPath build -enableCodeCoverage YES -resultBundlePath TestResults.xcresult"
+        }
+      }
+    },
+    "test-ui": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "xcodebuild test -project <%= name %>.xcodeproj -scheme <%= name %> -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -derivedDataPath build -only-testing:<%= name %>UITests",
+        "cwd": "<%= projectRoot %>"
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "xcrun simctl boot 'iPhone 15 Pro' || true && xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -derivedDataPath build && xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/<%= name %>.app && xcrun simctl launch booted <%= organizationIdentifier %>.<%= propertyName %>",
+        "cwd": "<%= projectRoot %>"
+      },
+      "configurations": {
+        "device": {
+          "command": "xcodebuild -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath build"
+        }
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "xcodebuild clean -project <%= name %>.xcodeproj -scheme <%= name %> && rm -rf build DerivedData",
+        "cwd": "<%= projectRoot %>"
+      }
+    },
+    "archive": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "xcodebuild archive -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Release -destination 'generic/platform=iOS' -archivePath build/<%= name %>.xcarchive -derivedDataPath build",
+        "cwd": "<%= projectRoot %>",
+        "outputPath": "<%= projectRoot %>/build/<%= name %>.xcarchive"
+      }
+    },
+    "export-ipa": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["archive"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "xcodebuild -exportArchive -archivePath build/<%= name %>.xcarchive -exportPath build/ipa -exportOptionsPlist ExportOptions.plist",
+        "cwd": "<%= projectRoot %>",
+        "outputPath": "<%= projectRoot %>/build/ipa"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.reportsFile}"],
+      "options": {
+        "command": "swiftlint lint --reporter json > swiftlint-report.json || true",
+        "cwd": "<%= projectRoot %>",
+        "reportsFile": "<%= projectRoot %>/swiftlint-report.json"
+      },
+      "configurations": {
+        "fix": {
+          "command": "swiftlint --fix && swiftlint lint"
+        }
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "swiftformat . --config .swiftformat",
+        "cwd": "<%= projectRoot %>"
+      },
+      "configurations": {
+        "check": {
+          "command": "swiftformat . --config .swiftformat --lint"
+        }
+      }
+    },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["test"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "xcrun xccov view build/Logs/Test/*.xcresult --report --json > coverage-report.json",
+        "cwd": "<%= projectRoot %>",
+        "outputPath": "<%= projectRoot %>/coverage-report.json"
+      }
+    },
+    "instruments": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "instruments -t 'Time Profiler' -D instruments-trace.trace -l 10000 build/Build/Products/Debug-iphonesimulator/<%= name %>.app",
+        "cwd": "<%= projectRoot %>"
+      }
+    },
+    "analyze": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "xcodebuild analyze -project <%= name %>.xcodeproj -scheme <%= name %> -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15 Pro'",
+        "cwd": "<%= projectRoot %>"
+      }
+    }
+  }
+}

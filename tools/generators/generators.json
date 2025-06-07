@@ -1,9 +1,14 @@
 {
     "generators": {
         "create-lib": {
-            "factory": "./create-lib",
-            "schema": "./schema.json",
+            "factory": "./lib/index",
+            "schema": "./lib/schema.json",
             "description": "Create a new library in the polyglot monorepo"
+        },
+        "create-app": {
+            "factory": "./app/index",
+            "schema": "./app/schema.json",
+            "description": "Create a new application in the monorepo"
         }
     }
 }

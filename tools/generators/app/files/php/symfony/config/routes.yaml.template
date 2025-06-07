@@ -1,0 +1,11 @@
+# API Routes
+api:
+    resource: '../src/Controller/'
+    type: attribute
+    prefix: /api
+
+# Index route
+index:
+    path: /
+    controller: App\Controller\DefaultController::index
+    methods: [GET]

@@ -1,0 +1,221 @@
+"""Tests for core application views."""
+
+import json
+import pytest
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth.models import User
+
+from core.models import ExampleModel
+
+
+class APIViewsTest(TestCase):
+    """Test cases for API views."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.client = Client()
+        self.example_item = ExampleModel.objects.create(
+            name="Test Item",
+            description="Test description",
+            is_active=True
+        )
+
+    def test_api_status_endpoint(self):
+        """Test the API status endpoint."""
+        url = reverse('core:api_status')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(data['status'], 'healthy')
+        self.assertEqual(data['service'], '<%= projectName %>')
+        self.assertEqual(data['version'], '0.1.0')
+        self.assertEqual(data['django_version'], '5.0')
+
+    def test_example_items_api_get(self):
+        """Test GET request to example items API."""
+        url = reverse('core:example_items_api')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertIn('items', data)
+        self.assertIn('pagination', data)
+
+        # Check pagination structure
+        pagination = data['pagination']
+        self.assertIn('page', pagination)
+        self.assertIn('per_page', pagination)
+        self.assertIn('total_pages', pagination)
+        self.assertIn('total_items', pagination)
+        self.assertIn('has_next', pagination)
+        self.assertIn('has_previous', pagination)
+
+        # Check items structure
+        items = data['items']
+        self.assertEqual(len(items), 1)
+
+        item = items[0]
+        self.assertEqual(item['name'], 'Test Item')
+        self.assertEqual(item['description'], 'Test description')
+        self.assertTrue(item['is_active'])
+        self.assertIn('id', item)
+        self.assertIn('created_at', item)
+        self.assertIn('updated_at', item)
+
+    def test_example_items_api_get_with_pagination(self):
+        """Test GET request with pagination parameters."""
+        # Create multiple items
+        for i in range(15):
+            ExampleModel.objects.create(name=f"Item {i}", is_active=True)
+
+        url = reverse('core:example_items_api')
+        response = self.client.get(url, {'page': 2, 'per_page': 5})
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        pagination = data['pagination']
+
+        self.assertEqual(pagination['page'], 2)
+        self.assertEqual(pagination['per_page'], 5)
+        self.assertEqual(len(data['items']), 5)
+        self.assertTrue(pagination['has_previous'])
+
+    def test_example_items_api_get_filter_active(self):
+        """Test GET request with is_active filter."""
+        # Create inactive item
+        ExampleModel.objects.create(name="Inactive Item", is_active=False)
+
+        url = reverse('core:example_items_api')
+
+        # Test filtering for active items
+        response = self.client.get(url, {'is_active': 'true'})
+        data = response.json()
+        self.assertEqual(len(data['items']), 1)
+        self.assertEqual(data['items'][0]['name'], 'Test Item')
+
+        # Test filtering for inactive items
+        response = self.client.get(url, {'is_active': 'false'})
+        data = response.json()
+        self.assertEqual(len(data['items']), 1)
+        self.assertEqual(data['items'][0]['name'], 'Inactive Item')
+
+    def test_example_items_api_post(self):
+        """Test POST request to create new item."""
+        url = reverse('core:example_items_api')
+        post_data = {
+            'name': 'New Item',
+            'description': 'New description',
+            'is_active': True
+        }
+
+        response = self.client.post(
+            url,
+            data=json.dumps(post_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        data = response.json()
+        self.assertEqual(data['name'], 'New Item')
+        self.assertEqual(data['description'], 'New description')
+        self.assertTrue(data['is_active'])
+        self.assertIn('id', data)
+        self.assertIn('created_at', data)
+        self.assertIn('updated_at', data)
+
+        # Verify item was created in database
+        self.assertTrue(
+            ExampleModel.objects.filter(name='New Item').exists()
+        )
+
+    def test_example_items_api_post_minimal_data(self):
+        """Test POST request with minimal data."""
+        url = reverse('core:example_items_api')
+        post_data = {'name': 'Minimal Item'}
+
+        response = self.client.post(
+            url,
+            data=json.dumps(post_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        data = response.json()
+        self.assertEqual(data['name'], 'Minimal Item')
+        self.assertEqual(data['description'], '')
+        self.assertTrue(data['is_active'])  # Default value
+
+    def test_example_items_api_post_invalid_json(self):
+        """Test POST request with invalid JSON."""
+        url = reverse('core:example_items_api')
+
+        response = self.client.post(
+            url,
+            data='invalid json',
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+        self.assertEqual(data['error'], 'Invalid JSON')
+
+    def test_example_items_api_unsupported_method(self):
+        """Test unsupported HTTP method."""
+        url = reverse('core:example_items_api')
+        response = self.client.put(url)
+
+        self.assertEqual(response.status_code, 405)  # Method Not Allowed
+
+
+# Note: Web view tests removed as this is primarily an API-focused Django application
+# If you need HTML templates and web views, you can add them later along with their tests
+
+
+@pytest.mark.django_db
+class APIViewsPytestTest:
+    """Pytest-style tests for API views."""
+
+    def test_health_check_endpoint(self, client):
+        """Test health check endpoint with pytest."""
+        url = reverse('core:api_status')
+        response = client.get(url)
+
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data['status'] == 'healthy'
+        assert data['service'] == '<%= projectName %>'
+        assert 'version' in data
+
+    def test_create_item_via_api(self, client):
+        """Test creating item via API with pytest."""
+        url = reverse('core:example_items_api')
+        post_data = {
+            'name': 'Pytest Item',
+            'description': 'Created with pytest',
+            'is_active': True
+        }
+
+        response = client.post(
+            url,
+            data=json.dumps(post_data),
+            content_type='application/json'
+        )
+
+        assert response.status_code == 201
+
+        data = response.json()
+        assert data['name'] == 'Pytest Item'
+        assert data['description'] == 'Created with pytest'
+        assert data['is_active'] is True
+
+        # Verify in database
+        assert ExampleModel.objects.filter(name='Pytest Item').exists()

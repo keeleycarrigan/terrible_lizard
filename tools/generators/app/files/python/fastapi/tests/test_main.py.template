@@ -1,0 +1,47 @@
+"""
+Test Main Application
+
+Tests for the main FastAPI application.
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+
+from src.main import create_app
+
+
+class TestMainApp:
+    """Test main application functionality."""
+
+    def test_create_app(self):
+        """Test that create_app returns a FastAPI instance."""
+        app = create_app()
+        assert app.title == "<%= name %>"
+        assert app.version == "0.1.0"
+
+    def test_docs_endpoints_available_in_development(self):
+        """Test that docs endpoints are available in development."""
+        app = create_app()
+
+        # Docs should be available since we're not in production
+        assert app.docs_url == "/docs"
+        assert app.redoc_url == "/redoc"
+        assert app.openapi_url == "/openapi.json"
+
+    def test_app_has_correct_middleware(self):
+        """Test that the app has the expected middleware."""
+        app = create_app()
+
+        # Check that middleware is configured (should have 2 middleware)
+        assert len(app.user_middleware) == 2
+
+    def test_app_includes_api_routes(self):
+        """Test that API routes are included."""
+        app = create_app()
+
+        # Check that routes are properly registered
+        route_paths = [route.path for route in app.routes]
+
+        # Should include API routes under /api prefix
+        api_routes = [path for path in route_paths if path.startswith("/api")]
+        assert len(api_routes) > 0

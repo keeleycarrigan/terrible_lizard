@@ -1,0 +1,244 @@
+# <%= name %>
+
+<%= description %>
+
+## 🏗️ **Architecture**
+
+This iOS application follows modern iOS development patterns:
+
+- **Language**: Swift <%= swiftVersion %>
+- **UI Framework**: <%= uiFramework %>
+- **iOS Target**: iOS <%= minIOSVersion %>+
+- **Architecture**: <%= architecture %>
+- **Dependency Management**: Swift Package Manager
+- **Testing**: XCTest with XCUITest for UI tests
+
+## 📋 **Requirements**
+
+- **Xcode**: 16.0+ (macOS Sequoia+)
+- **iOS Simulator**: iOS <%= minIOSVersion %>+
+- **Device**: iOS <%= minIOSVersion %>+ for testing on physical devices
+- **macOS**: 15.0+ (for Xcode compatibility)
+
+## 🚀 **Getting Started**
+
+### Development Setup
+
+1. **Open in Xcode**:
+   ```bash
+   open <%= name %>.xcodeproj
+   ```
+
+2. **Select Target**:
+   - Choose iOS Simulator or connected device
+   - Build and run (⌘+R)
+
+### Using Nx Commands
+
+This project integrates with Nx for consistent tooling:
+
+```bash
+# Build the iOS application
+pnpm nx build <%= projectName %>
+
+# Run tests
+pnpm nx test <%= projectName %>
+
+# Run UI tests
+pnpm nx test-ui <%= projectName %>
+
+# Run on simulator
+pnpm nx run <%= projectName %>
+
+# Clean build artifacts
+pnpm nx clean <%= projectName %>
+
+# Format Swift code
+pnpm nx format <%= projectName %>
+
+# Lint Swift code
+pnpm nx lint <%= projectName %>
+```
+
+## 📁 **Project Structure**
+
+```
+<%= name %>/
+├── <%= name %>.xcodeproj/          # Xcode project file
+├── <%= name %>/                    # Main application code
+│   ├── App/                        # App lifecycle & configuration
+│   │   ├── <%= name %>App.swift   # App entry point
+│   │   └── ContentView.swift       # Root view
+│   ├── Views/                      # SwiftUI Views / UIKit ViewControllers
+│   ├── Models/                     # Data models & Core Data
+│   ├── Services/                   # Business logic & networking
+│   ├── Utils/                      # Helper functions & extensions
+│   └── Resources/                  # Assets, localizations
+├── <%= name %>Tests/               # Unit tests
+├── <%= name %>UITests/             # UI/Integration tests
+└── project.json                    # Nx project configuration
+```
+
+## 🧪 **Testing**
+
+### Unit Tests
+```bash
+# Run all unit tests
+pnpm nx test <%= projectName %>
+
+# Run tests in Xcode
+# Product → Test (⌘+U)
+```
+
+### UI Tests
+```bash
+# Run UI tests
+pnpm nx test-ui <%= projectName %>
+
+# Run UI tests in Xcode
+# Select <%= name %>UITests scheme → Product → Test
+```
+
+### Test Coverage
+```bash
+# Generate test coverage report
+pnpm nx coverage <%= projectName %>
+```
+
+## 🎨 **UI Framework**
+
+<% if (uiFramework === 'SwiftUI') { %>
+### SwiftUI Development
+
+This app uses **SwiftUI** for modern, declarative UI development:
+
+- **Views**: Declarative UI components in `Views/`
+- **State Management**: `@State`, `@StateObject`, `@ObservableObject`
+- **Navigation**: `NavigationView`, `NavigationLink`
+- **Data Flow**: Combine framework integration
+- **Previews**: Live previews in Xcode Canvas
+
+**Key Files**:
+- `ContentView.swift` - Main app view
+- `<%= name %>App.swift` - App lifecycle & configuration
+
+<% } %>
+<% if (uiFramework === 'UIKit') { %>
+### UIKit Development
+
+This app uses **UIKit** for traditional iOS development:
+
+- **ViewControllers**: UI logic in `Views/`
+- **Storyboards**: Interface Builder integration
+- **Delegates & Protocols**: UIKit patterns
+- **Auto Layout**: Programmatic & Interface Builder
+- **Navigation**: UINavigationController, UITabBarController
+
+**Key Files**:
+- `SceneDelegate.swift` - Scene lifecycle
+- `AppDelegate.swift` - App lifecycle & configuration
+- `Main.storyboard` - Interface Builder layouts
+
+<% } %>
+
+## 🔧 **Configuration**
+
+### Build Configurations
+
+- **Debug**: Development builds with debug symbols
+- **Release**: Optimized production builds
+
+### Info.plist Settings
+
+Key configuration options in `Info.plist`:
+- App name & version
+- Required device capabilities
+- URL schemes
+- Privacy usage descriptions
+
+### Swift Package Dependencies
+
+Dependencies managed via Xcode → File → Add Package Dependencies:
+
+```swift
+// Common useful packages:
+// - Alamofire (networking)
+// - SwiftUI Navigation (advanced navigation)
+// - SwiftFormat (code formatting)
+```
+
+## 📱 **Deployment**
+
+### App Store Deployment
+
+1. **Archive Build**:
+   ```bash
+   # Create archive build
+   pnpm nx archive <%= projectName %>
+   ```
+
+2. **Upload to App Store Connect**:
+   - Use Xcode Organizer
+   - Or Application Loader
+
+3. **TestFlight Distribution**:
+   - Internal testing
+   - External beta testing
+
+### Enterprise Distribution
+
+```bash
+# Create enterprise build
+pnpm nx build-enterprise <%= projectName %>
+```
+
+## 🛠️ **Development Tools**
+
+### Code Quality
+
+- **SwiftLint**: Enforces Swift style guide
+- **SwiftFormat**: Automatic code formatting
+- **Periphery**: Unused code detection
+
+### Debugging
+
+- **Xcode Debugger**: Breakpoints, LLDB console
+- **Instruments**: Performance profiling
+- **Console App**: Device logs & crashes
+
+### Performance
+
+- **Xcode Organizer**: Crash reports & metrics
+- **MetricKit**: App performance data
+- **Instruments**: Memory, CPU, Network analysis
+
+## 🤝 **Contributing**
+
+1. Create feature branch from `main`
+2. Follow Swift coding standards
+3. Add unit tests for new features
+4. Run tests and ensure they pass
+5. Submit pull request
+
+### Code Style
+
+- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- Use SwiftLint configuration in `.swiftlint.yml`
+- Format code with SwiftFormat
+
+## 📖 **Additional Resources**
+
+- [Swift Documentation](https://developer.apple.com/swift/)
+- [iOS Development Guide](https://developer.apple.com/ios/)
+- [SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)
+- [UIKit Documentation](https://developer.apple.com/documentation/uikit)
+- [Xcode User Guide](https://developer.apple.com/documentation/xcode)
+
+## 📄 **License**
+
+[Your License Here]
+
+---
+
+**Generated by Terrible Lizard iOS Generator**
+🦎 *Making iOS development terrible... ly awesome!*

@@ -1,0 +1,57 @@
+"""API routes for the Flask application."""
+
+from flask import Blueprint, jsonify, request
+
+api_bp = Blueprint('api', __name__)
+
+
+@api_bp.route('/health')
+def health():
+    """API health check endpoint."""
+    return jsonify({
+        'status': 'healthy',
+        'app': '<%= projectName %>',
+        'version': '0.1.0',
+        'framework': 'Flask'
+    })
+
+
+@api_bp.route('/hello')
+def hello():
+    """Example API endpoint."""
+    name = request.args.get('name', 'World')
+    return jsonify({
+        'message': f'Hello, {name}!',
+        'app': '<%= projectName %>'
+    })
+
+
+@api_bp.route('/echo', methods=['POST'])
+def echo():
+    """Echo endpoint that returns the request data."""
+    data = request.get_json() or {}
+    return jsonify({
+        'echo': data,
+        'method': request.method,
+        'timestamp': request.date.isoformat() if request.date else None
+    })
+
+
+@api_bp.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors for API routes."""
+    return jsonify({
+        'error': 'Not found',
+        'message': 'The requested API endpoint was not found.',
+        'status': 404
+    }), 404
+
+
+@api_bp.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors for API routes."""
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred.',
+        'status': 500
+    }), 500

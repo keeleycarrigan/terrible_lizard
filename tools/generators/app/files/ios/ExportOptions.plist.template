@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Distribution method: app-store, ad-hoc, enterprise, development -->
+    <key>method</key>
+    <string>development</string>
+
+    <!-- Team ID for code signing -->
+    <key>teamID</key>
+    <string><!-- Replace with your Team ID --></string>
+
+    <!-- Upload symbols for crash analysis -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Upload bitcode for App Store optimization -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Compile bitcode during export -->
+    <key>compileBitcode</key>
+    <false/>
+
+    <!-- Strip Swift symbols -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Thinning for specific devices -->
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+
+    <!-- Provisioning profiles by bundle identifier -->
+    <key>provisioningProfiles</key>
+    <dict>
+        <key><%= organizationIdentifier %>.<%= propertyName %></key>
+        <string><!-- Replace with your provisioning profile name --></string>
+    </dict>
+
+    <!-- Code signing certificate -->
+    <key>signingCertificate</key>
+    <string>iOS Developer</string>
+
+    <!-- Distribution signing style -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Include manifest for over-the-air installation -->
+    <key>manifest</key>
+    <dict>
+        <key>appURL</key>
+        <string>https://yourserver.com/<%= name %>.ipa</string>
+        <key>displayImageURL</key>
+        <string>https://yourserver.com/<%= name %>-icon.png</string>
+        <key>fullSizeImageURL</key>
+        <string>https://yourserver.com/<%= name %>-full.png</string>
+    </dict>
+</dict>
+</plist>

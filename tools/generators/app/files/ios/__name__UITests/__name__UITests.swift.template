@@ -1,0 +1,385 @@
+//
+//  <%= name %>UITests.swift
+//  <%= name %>UITests
+//
+//  Created by Terrible Lizard Generator
+//
+
+import XCTest
+
+final class <%= className %>UITests: XCTestCase {
+
+    // MARK: - Properties
+
+    var app: XCUIApplication!
+
+    // MARK: - Setup & Teardown
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+
+        app = XCUIApplication()
+        app.launchArguments = ["--uitesting"]
+        app.launchEnvironment = ["UITEST_MODE": "1"]
+        app.launch()
+    }
+
+    override func tearDownWithError() throws {
+        app = nil
+    }
+
+    // MARK: - App Launch Tests
+
+    func testAppLaunch() throws {
+        // Test that the app launches successfully
+        XCTAssertTrue(app.state == .runningForeground)
+
+        // Verify main UI elements are present
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.exists)
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+    }
+
+    func testMainTabBarExists() throws {
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.exists)
+
+        // Verify all tab items exist
+        let homeTab = tabBar.buttons["Home"]
+        let exploreTab = tabBar.buttons["Explore"]
+        let profileTab = tabBar.buttons["Profile"]
+
+        XCTAssertTrue(homeTab.exists)
+        XCTAssertTrue(exploreTab.exists)
+        XCTAssertTrue(profileTab.exists)
+    }
+
+    // MARK: - Navigation Tests
+
+    func testTabNavigation() throws {
+        let tabBar = app.tabBars.firstMatch
+
+        // Test Home tab
+        let homeTab = tabBar.buttons["Home"]
+        homeTab.tap()
+
+        let homeNavigationBar = app.navigationBars["Home"]
+        XCTAssertTrue(homeNavigationBar.waitForExistence(timeout: 3))
+
+        // Test Explore tab
+        let exploreTab = tabBar.buttons["Explore"]
+        exploreTab.tap()
+
+        let exploreNavigationBar = app.navigationBars["Explore"]
+        XCTAssertTrue(exploreNavigationBar.waitForExistence(timeout: 3))
+
+        // Test Profile tab
+        let profileTab = tabBar.buttons["Profile"]
+        profileTab.tap()
+
+        let profileNavigationBar = app.navigationBars["Profile"]
+        XCTAssertTrue(profileNavigationBar.waitForExistence(timeout: 3))
+    }
+
+    func testSettingsNavigation() throws {
+        // Navigate to settings
+        let settingsButton = app.navigationBars.buttons["gear"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.tap()
+
+        // Verify settings view appears
+        let settingsNavigationBar = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsNavigationBar.waitForExistence(timeout: 3))
+
+        // Test closing settings
+        let doneButton = app.navigationBars.buttons["Done"]
+        XCTAssertTrue(doneButton.exists)
+        doneButton.tap()
+
+        // Verify we're back to main view
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+    }
+
+    // MARK: - Home View Tests
+
+    func testHomeViewContent() throws {
+        // Ensure we're on the Home tab
+        let homeTab = app.tabBars.buttons["Home"]
+        homeTab.tap()
+
+        // Check for welcome card
+        let welcomeText = app.staticTexts["Welcome!"]
+        XCTAssertTrue(welcomeText.waitForExistence(timeout: 5))
+
+        // Check for app-specific welcome message
+        let welcomeMessage = app.staticTexts["Thanks for using <%= name %>. We're excited to have you here!"]
+        XCTAssertTrue(welcomeMessage.exists)
+    }
+
+    func testHomeViewPullToRefresh() throws {
+        // Navigate to Home tab
+        let homeTab = app.tabBars.buttons["Home"]
+        homeTab.tap()
+
+        // Find the scroll view and perform pull to refresh
+        let scrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 5))
+
+        // Perform pull to refresh gesture
+        let firstCell = scrollView.children(matching: .other).firstMatch
+        let start = firstCell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let finish = firstCell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0, thenDragTo: finish)
+
+        // Verify content still exists after refresh
+        let welcomeText = app.staticTexts["Welcome!"]
+        XCTAssertTrue(welcomeText.waitForExistence(timeout: 5))
+    }
+
+    // MARK: - Explore View Tests
+
+    func testExploreViewSearch() throws {
+        // Navigate to Explore tab
+        let exploreTab = app.tabBars.buttons["Explore"]
+        exploreTab.tap()
+
+        // Find and interact with search field
+        let searchField = app.textFields["Search..."]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+
+        searchField.tap()
+        searchField.typeText("Technology")
+
+        // Verify search functionality (categories should filter)
+        let technologyCategory = app.staticTexts["Technology"]
+        XCTAssertTrue(technologyCategory.waitForExistence(timeout: 3))
+
+        // Clear search
+        searchField.clearAndEnterText("")
+
+        // Verify all categories are visible again
+        let designCategory = app.staticTexts["Design"]
+        XCTAssertTrue(designCategory.waitForExistence(timeout: 3))
+    }
+
+    func testExploreCategoryGrid() throws {
+        // Navigate to Explore tab
+        let exploreTab = app.tabBars.buttons["Explore"]
+        exploreTab.tap()
+
+        // Verify category cards exist
+        let technologyCategory = app.staticTexts["Technology"]
+        let designCategory = app.staticTexts["Design"]
+        let businessCategory = app.staticTexts["Business"]
+        let healthCategory = app.staticTexts["Health"]
+
+        XCTAssertTrue(technologyCategory.waitForExistence(timeout: 5))
+        XCTAssertTrue(designCategory.exists)
+        XCTAssertTrue(businessCategory.exists)
+        XCTAssertTrue(healthCategory.exists)
+    }
+
+    // MARK: - Profile View Tests
+
+    func testProfileViewContent() throws {
+        // Navigate to Profile tab
+        let profileTab = app.tabBars.buttons["Profile"]
+        profileTab.tap()
+
+        // Verify profile content
+        let userName = app.staticTexts["John Doe"]
+        let userEmail = app.staticTexts["john.doe@example.com"]
+
+        XCTAssertTrue(userName.waitForExistence(timeout: 5))
+        XCTAssertTrue(userEmail.exists)
+
+        // Verify stats
+        let postsCount = app.staticTexts["42"]
+        let followersCount = app.staticTexts["1234"]
+        let followingCount = app.staticTexts["567"]
+
+        XCTAssertTrue(postsCount.exists)
+        XCTAssertTrue(followersCount.exists)
+        XCTAssertTrue(followingCount.exists)
+
+        // Verify action buttons
+        let editProfileButton = app.buttons["Edit Profile"]
+        let shareProfileButton = app.buttons["Share Profile"]
+
+        XCTAssertTrue(editProfileButton.exists)
+        XCTAssertTrue(shareProfileButton.exists)
+    }
+
+    func testProfileActions() throws {
+        // Navigate to Profile tab
+        let profileTab = app.tabBars.buttons["Profile"]
+        profileTab.tap()
+
+        // Test Edit Profile button
+        let editProfileButton = app.buttons["Edit Profile"]
+        XCTAssertTrue(editProfileButton.waitForExistence(timeout: 5))
+        editProfileButton.tap()
+
+        // Test Share Profile button
+        let shareProfileButton = app.buttons["Share Profile"]
+        XCTAssertTrue(shareProfileButton.waitForExistence(timeout: 3))
+        shareProfileButton.tap()
+    }
+
+    // MARK: - Settings View Tests
+
+    func testSettingsViewContent() throws {
+        // Open settings
+        let settingsButton = app.navigationBars.buttons["gear"]
+        settingsButton.tap()
+
+        // Verify settings sections and items
+        let generalSection = app.staticTexts["General"]
+        let supportSection = app.staticTexts["Support"]
+        let aboutSection = app.staticTexts["About"]
+
+        XCTAssertTrue(generalSection.waitForExistence(timeout: 3))
+        XCTAssertTrue(supportSection.exists)
+        XCTAssertTrue(aboutSection.exists)
+
+        // Verify specific settings items
+        let notificationsItem = app.staticTexts["Notifications"]
+        let privacyItem = app.staticTexts["Privacy"]
+        let accountItem = app.staticTexts["Account"]
+        let versionItem = app.staticTexts["Version"]
+
+        XCTAssertTrue(notificationsItem.exists)
+        XCTAssertTrue(privacyItem.exists)
+        XCTAssertTrue(accountItem.exists)
+        XCTAssertTrue(versionItem.exists)
+    }
+
+    // MARK: - Accessibility Tests
+
+    func testAccessibilityLabels() throws {
+        // Test that important UI elements have accessibility labels
+        let homeTab = app.tabBars.buttons["Home"]
+        let exploreTab = app.tabBars.buttons["Explore"]
+        let profileTab = app.tabBars.buttons["Profile"]
+
+        XCTAssertTrue(homeTab.isAccessibilityElement)
+        XCTAssertTrue(exploreTab.isAccessibilityElement)
+        XCTAssertTrue(profileTab.isAccessibilityElement)
+
+        // Test settings button accessibility
+        let settingsButton = app.navigationBars.buttons["gear"]
+        XCTAssertTrue(settingsButton.isAccessibilityElement)
+    }
+
+    func testVoiceOverNavigation() throws {
+        // Enable VoiceOver for testing
+        // Note: This would require additional setup in a real test environment
+
+        // Test that VoiceOver can navigate through main UI elements
+        let homeTab = app.tabBars.buttons["Home"]
+        homeTab.tap()
+
+        // Verify accessibility elements are properly configured
+        XCTAssertNotNil(homeTab.label)
+        XCTAssertFalse(homeTab.label.isEmpty)
+    }
+
+    // MARK: - Performance Tests
+
+    func testAppLaunchPerformance() throws {
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            XCUIApplication().launch()
+        }
+    }
+
+    func testScrollPerformance() throws {
+        // Navigate to a scrollable view
+        let homeTab = app.tabBars.buttons["Home"]
+        homeTab.tap()
+
+        let scrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 5))
+
+        measure(metrics: [XCTOSSignpostMetric.scrollingAndDecelerationMetric]) {
+            scrollView.swipeUp()
+            scrollView.swipeDown()
+        }
+    }
+
+    // MARK: - Error Handling Tests
+
+    func testErrorAlertHandling() throws {
+        // This test would require triggering an error state
+        // For now, we'll test that the app handles alerts gracefully
+
+        // Navigate through the app to ensure no unexpected alerts appear
+        let exploreTab = app.tabBars.buttons["Explore"]
+        exploreTab.tap()
+
+        let profileTab = app.tabBars.buttons["Profile"]
+        profileTab.tap()
+
+        let homeTab = app.tabBars.buttons["Home"]
+        homeTab.tap()
+
+        // Verify no system alerts are present
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+
+    // MARK: - Orientation Tests
+
+    func testDeviceRotation() throws {
+        // Test portrait orientation
+        XCUIDevice.shared.orientation = .portrait
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+
+        // Test landscape orientation
+        XCUIDevice.shared.orientation = .landscapeLeft
+
+        // Verify UI still works in landscape
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+
+        // Return to portrait
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    // MARK: - Memory and Stability Tests
+
+    func testAppStability() throws {
+        // Perform various actions to test app stability
+        for _ in 0..<10 {
+            // Navigate between tabs
+            app.tabBars.buttons["Home"].tap()
+            app.tabBars.buttons["Explore"].tap()
+            app.tabBars.buttons["Profile"].tap()
+
+            // Open and close settings
+            app.navigationBars.buttons["gear"].tap()
+            app.navigationBars.buttons["Done"].tap()
+        }
+
+        // Verify app is still responsive
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.exists)
+    }
+}
+
+// MARK: - Helper Extensions
+
+extension XCUIElement {
+    func clearAndEnterText(_ text: String) {
+        guard let stringValue = self.value as? String else {
+            XCTFail("Tried to clear and enter text into a non string value")
+            return
+        }
+
+        self.tap()
+
+        let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: stringValue.count)
+        self.typeText(deleteString)
+        self.typeText(text)
+    }
+}

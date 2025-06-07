@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  <%= name %>:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Development: mount source for live rebuilds
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    # Development: use dev server with hot reload
+    command: sh -c "cd /app && npm run serve:<%= name %>"
+    profiles:
+      - dev
+
+  <%= name %>-prod:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    # Production: run built server
+    profiles:
+      - prod
+
+  # Optional: Add database for full-stack applications
+  # database:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: <%= name %>_dev
+  #     POSTGRES_USER: <%= name %>
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   profiles:
+  #     - dev
+
+# volumes:
+#   postgres_data:

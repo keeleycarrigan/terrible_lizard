@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "id": "CreateApp",
+  "title": "Create an Application",
+  "description": "Create a new application in the monorepo",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Application name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the application?"
+    },
+        "type": {
+      "type": "string",
+      "description": "Application type (auto-detected from framework if not specified)",
+      "enum": ["web", "python", "php", "ios-native", "android-native"]
+    },
+    "framework": {
+      "type": "string",
+      "description": "Framework to use (not required for iOS/Android apps)"
+    },
+    "appType": {
+      "type": "string",
+      "description": "Application deployment type (frontend: static assets + Nginx, backend: Node.js runtime server). Auto-detected if not specified.",
+      "enum": ["frontend", "backend"]
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the application is placed"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting)"
+    },
+    "docker": {
+      "type": "boolean",
+      "description": "Add Docker support to the application",
+      "default": true
+    },
+    "organizationIdentifier": {
+      "type": "string",
+      "description": "Organization identifier for iOS/Android apps (e.g., com.company.app)"
+    }
+  },
+  "required": ["name"]
+}

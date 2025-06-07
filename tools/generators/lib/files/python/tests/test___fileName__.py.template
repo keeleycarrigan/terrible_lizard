@@ -1,0 +1,189 @@
+"""
+Tests for <%= name %> library
+
+Comprehensive test suite covering the main functionality of the library.
+"""
+
+import pytest
+from typing import Dict, Any
+
+from <%= moduleName %>.<%= fileName %> import <%= className %>, create_<%= fileName %>, quick_process
+
+
+class Test<%= className %>:
+    """Test suite for <%= className %> class."""
+
+    def test_init_default(self):
+        """Test default initialization."""
+        instance = <%= className %>()
+        assert instance.name == "<%= name %>"
+        assert instance.config == {}
+
+    def test_init_with_name(self):
+        """Test initialization with custom name."""
+        instance = <%= className %>(name="custom")
+        assert instance.name == "custom"
+        assert instance.config == {}
+
+    def test_init_with_config(self):
+        """Test initialization with configuration."""
+        config = {"key": "value", "number": 42}
+        instance = <%= className %>(config=config)
+        assert instance.config == config
+
+    def test_process_returns_data(self):
+        """Test that process method returns the input data."""
+        instance = <%= className %>()
+        test_data = {"test": "data"}
+        result = instance.process(test_data)
+        assert result == test_data
+
+    def test_process_different_data_types(self):
+        """Test process method with different data types."""
+        instance = <%= className %>()
+
+        # Test with string
+        assert instance.process("hello") == "hello"
+
+        # Test with number
+        assert instance.process(42) == 42
+
+        # Test with list
+        test_list = [1, 2, 3]
+        assert instance.process(test_list) == test_list
+
+        # Test with dictionary
+        test_dict = {"a": 1, "b": 2}
+        assert instance.process(test_dict) == test_dict
+
+    def test_get_info(self):
+        """Test get_info method returns correct information."""
+        instance = <%= className %>(name="test", config={"debug": True})
+        info = instance.get_info()
+
+        assert info["name"] == "test"
+        assert info["config"] == {"debug": True}
+        assert info["version"] == "0.1.0"
+
+    def test_str_representation(self):
+        """Test string representation."""
+        instance = <%= className %>(name="test_instance")
+        assert str(instance) == "<%= className %>(name='test_instance')"
+
+    def test_repr_representation(self):
+        """Test developer representation."""
+        config = {"debug": True}
+        instance = <%= className %>(name="test", config=config)
+        expected = f"<%= className %>(name='test', config={config})"
+        assert repr(instance) == expected
+
+
+class TestConvenienceFunctions:
+    """Test suite for convenience functions."""
+
+    def test_create_<%= fileName %>_default(self):
+        """Test create_<%= fileName %> with default parameters."""
+        instance = create_<%= fileName %>()
+        assert isinstance(instance, <%= className %>)
+        assert instance.name == "<%= name %>"
+
+    def test_create_<%= fileName %>_with_kwargs(self):
+        """Test create_<%= fileName %> with keyword arguments."""
+        instance = create_<%= fileName %>(name="created", config={"test": True})
+        assert instance.name == "created"
+        assert instance.config == {"test": True}
+
+    def test_quick_process_default(self):
+        """Test quick_process with default parameters."""
+        test_data = {"quick": "test"}
+        result = quick_process(test_data)
+        assert result == test_data
+
+    def test_quick_process_with_name(self):
+        """Test quick_process with custom name."""
+        test_data = "test string"
+        result = quick_process(test_data, name="custom_quick")
+        assert result == test_data
+
+
+@pytest.fixture
+def sample_<%= fileName %>():
+    """Fixture providing a configured <%= className %> instance."""
+    return <%= className %>(
+        name="test_instance",
+        config={
+            "debug": True,
+            "timeout": 30,
+            "retries": 3
+        }
+    )
+
+
+class TestWithFixture:
+    """Tests using the fixture."""
+
+    def test_fixture_configuration(self, sample_<%= fileName %>):
+        """Test that fixture is properly configured."""
+        assert sample_<%= fileName %>.name == "test_instance"
+        assert sample_<%= fileName %>.config["debug"] is True
+        assert sample_<%= fileName %>.config["timeout"] == 30
+        assert sample_<%= fileName %>.config["retries"] == 3
+
+    def test_process_with_fixture(self, sample_<%= fileName %>):
+        """Test processing with configured instance."""
+        test_data = {"fixture": "test"}
+        result = sample_<%= fileName %>.process(test_data)
+        assert result == test_data
+
+
+# Integration tests
+class TestIntegration:
+    """Integration tests for library functionality."""
+
+    def test_multiple_instances(self):
+        """Test that multiple instances work independently."""
+        instance1 = <%= className %>(name="first", config={"id": 1})
+        instance2 = <%= className %>(name="second", config={"id": 2})
+
+        assert instance1.name != instance2.name
+        assert instance1.config != instance2.config
+
+        # Test that they process independently
+        data1 = {"for": "instance1"}
+        data2 = {"for": "instance2"}
+
+        result1 = instance1.process(data1)
+        result2 = instance2.process(data2)
+
+        assert result1 == data1
+        assert result2 == data2
+
+    def test_workflow(self):
+        """Test a typical workflow using the library."""
+        # Create instance
+        processor = create_<%= fileName %>(name="workflow", config={"steps": 3})
+
+        # Check initial state
+        info = processor.get_info()
+        assert info["name"] == "workflow"
+
+        # Process some data
+        input_data = {"step": 1, "value": "initial"}
+        output_data = processor.process(input_data)
+
+        assert output_data == input_data
+
+
+# Performance tests (if applicable)
+@pytest.mark.slow
+class TestPerformance:
+    """Performance tests for the library."""
+
+    def test_large_data_processing(self):
+        """Test processing with large amounts of data."""
+        instance = <%= className %>()
+        large_data = list(range(10000))
+
+        result = instance.process(large_data)
+        assert result == large_data
+        assert len(result) == 10000

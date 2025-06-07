@@ -1,0 +1,149 @@
+# Multi-stage Dockerfile for Laravel applications
+# Composer dependencies stage
+FROM php:8.2-cli AS composer
+
+# Install composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install required extensions for composer
+RUN apt-get update && apt-get install -y git zip unzip \
+    && docker-php-ext-install pdo \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY composer.json ./
+COPY composer.lock* ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Development stage
+FROM php:8.2-fpm AS development
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    zip \
+    unzip \
+    nginx \
+    supervisor \
+    && pecl install redis \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd opcache \
+    && docker-php-ext-enable redis \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application code first
+COPY . .
+
+# Copy composer dependencies from composer stage (this overwrites any host vendor)
+COPY --from=composer /app/vendor ./vendor
+
+# Install dev dependencies that aren't in production vendor
+RUN composer install --dev --optimize-autoloader --no-interaction --no-scripts
+
+# Create Laravel directories
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+
+# Set up permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
+
+# Configure Nginx
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/default.conf /etc/nginx/sites-available/default
+
+# Configure PHP-FPM
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/php.ini /usr/local/etc/php/php.ini
+
+# Configure Supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy and configure database initialization script
+COPY docker/init-db.sh /var/www/html/docker/init-db.sh
+RUN chmod +x /var/www/html/docker/init-db.sh
+
+# Create directories
+RUN mkdir -p /var/log/supervisor /var/log/nginx /var/log/php-fpm \
+    && chmod 755 /var/log/supervisor /var/log/nginx /var/log/php-fpm
+
+# Laravel optimization will be done at runtime after .env is available
+
+EXPOSE 80 9000
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+# Production stage
+FROM php:8.2-fpm AS production
+
+# Install system dependencies (production only)
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    nginx \
+    supervisor \
+    && pecl install redis \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd opcache \
+    && docker-php-ext-enable redis \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy composer dependencies from composer stage
+COPY --from=composer /app/vendor ./vendor
+
+# Copy application code
+COPY . .
+
+# Create Laravel directories
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+
+# Set up permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
+
+# Configure Nginx for production
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/default.conf /etc/nginx/sites-available/default
+
+# Configure PHP-FPM for production
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/php-prod.ini /usr/local/etc/php/php.ini
+
+# Configure Supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy and configure database initialization script
+COPY docker/init-db.sh /var/www/html/docker/init-db.sh
+RUN chmod +x /var/www/html/docker/init-db.sh
+
+# Create directories
+RUN mkdir -p /var/log/supervisor /var/log/nginx /var/log/php-fpm \
+    && chmod 755 /var/log/supervisor /var/log/nginx /var/log/php-fpm
+
+# Laravel optimization will be done at runtime after .env is available
+
+# Create non-root user for production
+RUN addgroup --gid 1000 appuser \
+    && adduser --uid 1000 --gid 1000 --disabled-password --gecos '' appuser \
+    && chown -R appuser:appuser /var/www/html
+
+USER appuser
+
+EXPOSE 80 9000
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

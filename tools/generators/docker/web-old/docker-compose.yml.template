@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  <%= fileName %>:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: <%= projectName %>
+    ports:
+      - "3000:80"
+    networks:
+      - <%= fileName %>-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Development service (uncomment for dev mode)
+  # <%= fileName %>-dev:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dev
+  #   container_name: <%= projectName %>-dev
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #   command: pnpm nx serve <%= projectName %>
+  #   networks:
+  #     - <%= fileName %>-network
+
+networks:
+  <%= fileName %>-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+# volumes:
+#   app-data:

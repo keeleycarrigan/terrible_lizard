@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  android-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: <%= projectName %>-android
+    volumes:
+      # Mount source code for development
+      - .:/app
+      # Cache Gradle dependencies
+      - gradle-cache:/root/.gradle
+      # Cache Android SDK (optional, for faster rebuilds)
+      - android-sdk-cache:/opt/android-sdk
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - GRADLE_USER_HOME=/root/.gradle
+    working_dir: /app
+    command: tail -f /dev/null  # Keep container running for development
+
+  # Build service for one-off builds
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: <%= projectName %>-build
+    volumes:
+      - .:/app
+      - gradle-cache:/root/.gradle
+      - android-sdk-cache:/opt/android-sdk
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - GRADLE_USER_HOME=/root/.gradle
+    working_dir: /app
+    profiles:
+      - build
+    command: ./gradlew assembleDebug
+
+volumes:
+  gradle-cache:
+    driver: local
+  android-sdk-cache:
+    driver: local

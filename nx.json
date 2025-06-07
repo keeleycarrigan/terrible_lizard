@@ -1,82 +1,117 @@
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "plugins": [
-    "@nxlv/python",
-    "@nx/gradle",
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      }
-    }
-  ],
-  "defaultBase": "main",
-  "targetDefaults": {
-    "build": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
-    },
-    "test": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/jest.preset.js"
-      ]
-    },
-    "lint": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore"
-      ]
-    },
-    "docker-build": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "^default",
-        "{projectRoot}/Dockerfile"
-      ]
-    },
-    "@nx/js:tsc": {
-      "cache": true,
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
-    }
-  },
-  "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
+    "$schema": "./node_modules/nx/schemas/nx-schema.json",
+    "plugins": [
+        "@nxlv/python",
+        "@nx/gradle",
+        {
+            "plugin": "@nx/eslint/plugin",
+            "options": {
+                "targetName": "lint"
+            }
+        },
+        {
+            "plugin": "@nx/jest/plugin",
+            "options": {
+                "targetName": "test"
+            },
+            "exclude": [
+                "backend-nest-e2e/**/*",
+                "backend-nest-e2e/**/*",
+                "apps-e2e/**/*",
+                "apps/backend-test-e2e/**/*",
+                "apps/backend-test-e2e/**/*"
+            ]
+        },
+        {
+            "plugin": "@nx/playwright/plugin",
+            "options": {
+                "targetName": "e2e"
+            }
+        }
     ],
-    "production": [
-      "default",
-      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
-      "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
-      "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s"
-    ],
-    "sharedGlobals": [
-      "{workspaceRoot}/.github/workflows/ci.yml"
-    ]
-  },
-  "nxCloudId": "6840dcd0644682750d7e269c"
+    "defaultBase": "main",
+    "targetDefaults": {
+        "build": {
+            "cache": true,
+            "inputs": ["default", "^default"],
+            "dependsOn": ["^build"]
+        },
+        "test": {
+            "cache": true,
+            "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.js"]
+        },
+        "lint": {
+            "cache": true,
+            "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/.eslintignore"
+            ]
+        },
+        "docker-build": {
+            "cache": true,
+            "inputs": ["default", "^default", "{projectRoot}/Dockerfile"]
+        },
+        "@nx/js:tsc": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@nx/vite:test": {
+            "cache": true,
+            "inputs": ["default", "^production"]
+        },
+        "@nx/vite:build": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@nx/webpack:webpack": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@angular-devkit/build-angular:application": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        }
+    },
+    "namedInputs": {
+        "default": ["{projectRoot}/**/*", "sharedGlobals"],
+        "production": [
+            "default",
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/tsconfig.spec.json",
+            "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/.eslintrc.json",
+            "!{projectRoot}/src/test-setup.[jt]s",
+            "!{projectRoot}/test-setup.[jt]s"
+        ],
+        "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    },
+    "nxCloudId": "6840dcd0644682750d7e269c",
+    "generators": {
+        "@nx/react": {
+            "application": {
+                "babel": true,
+                "style": "css",
+                "linter": "eslint",
+                "bundler": "vite"
+            },
+            "component": {
+                "style": "css"
+            },
+            "library": {
+                "style": "css",
+                "linter": "eslint"
+            }
+        },
+        "@nx/angular:application": {
+            "e2eTestRunner": "playwright",
+            "linter": "eslint",
+            "style": "css",
+            "unitTestRunner": "jest"
+        }
+    }
 }

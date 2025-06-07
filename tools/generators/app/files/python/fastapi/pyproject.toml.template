@@ -1,0 +1,109 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "<%= projectName %>"
+version = "0.1.0"
+description = "FastAPI application: <%= projectName %>"
+authors = ["Your Organization <dev@yourorg.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^<%= pythonVersion || '3.11' %>"
+fastapi = "^0.104.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+python-dotenv = "^1.0.0"
+sqlalchemy = "^2.0.0"
+alembic = "^1.13.0"
+asyncpg = "^0.29.0"
+python-multipart = "^0.0.6"
+httpx = "^0.25.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+pytest-cov = "^4.0"
+pytest-asyncio = "^0.21.0"
+pytest-mock = "^3.12.0"
+ruff = "^0.1"
+mypy = "^1.0"
+black = "^23.0"
+httpx = "^0.25.0"
+factory-boy = "^3.3.0"
+aiosqlite = "^0.19.0"
+
+[tool.ruff]
+extend = "../../../pyproject.toml"
+src = ["src"]
+
+[tool.ruff.lint]
+# FastAPI-specific linting rules
+extend-ignore = [
+    "D100", "D104",  # Allow missing docstrings in some cases
+    "B008",          # Allow function calls in argument defaults for FastAPI dependencies
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=85",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "api: API endpoint tests",
+    "database: Database tests",
+]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true

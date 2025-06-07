@@ -1,0 +1,56 @@
+# Use OpenJDK 17 as base image for Android development
+# Support both x86_64 and ARM64 architectures
+FROM --platform=$BUILDPLATFORM openjdk:17-jdk-slim
+
+# Set environment variables
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/cmdline-tools/latest/bin
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Android SDK directory
+RUN mkdir -p ${ANDROID_HOME}
+
+# Download and install Android command line tools (architecture-aware)
+ARG TARGETARCH
+RUN ARCH=${TARGETARCH} && \
+    if [ "$ARCH" = "amd64" ]; then ANDROID_ARCH="linux"; else ANDROID_ARCH="linux"; fi && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-${ANDROID_ARCH}-11076708_latest.zip -O /tmp/commandlinetools.zip \
+    && unzip -q /tmp/commandlinetools.zip -d /tmp \
+    && mkdir -p ${ANDROID_HOME}/cmdline-tools/latest \
+    && mv /tmp/cmdline-tools/* ${ANDROID_HOME}/cmdline-tools/latest/ \
+    && rm -rf /tmp/commandlinetools.zip /tmp/cmdline-tools
+
+# Accept Android SDK licenses
+RUN yes | sdkmanager --licenses
+
+# Install Android SDK components
+RUN sdkmanager --update \
+    && sdkmanager "platform-tools" \
+    && sdkmanager "platforms;android-34" \
+    && sdkmanager "build-tools;34.0.0" \
+    && sdkmanager "extras;android;m2repository" \
+    && sdkmanager "extras;google;m2repository"
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Make gradlew executable and ensure proper permissions
+RUN chmod +x ./gradlew && \
+    find . -name "*.sh" -exec chmod +x {} \;
+
+# Download Gradle dependencies and verify setup
+RUN ./gradlew --version
+
+# Default command
+CMD ["./gradlew", "assembleDebug"]

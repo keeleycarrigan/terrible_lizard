@@ -1,0 +1,22 @@
+# Exclude vendor directory (will be created by composer install)
+vendor/
+
+# Exclude Git and IDE files
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Exclude temporary and cache files
+var/cache/
+var/log/
+var/sessions/
+
+# Exclude development files
+*.md
+Dockerfile
+docker-compose.yml
+
+# Exclude OS files
+.DS_Store
+Thumbs.db

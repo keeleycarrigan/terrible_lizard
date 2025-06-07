@@ -1,0 +1,60 @@
+"""
+Django test settings for <%= projectName %> project.
+"""
+
+from .base import *
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+# Test database - use SQLite in memory for speed
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+}
+
+# Disable migrations for faster tests
+class DisableMigrations:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return None
+
+MIGRATION_MODULES = DisableMigrations()
+
+# Password hashing for tests (faster)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
+
+# Cache settings for tests
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
+# Email backend for tests
+EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+# Minimal logging for tests
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.NullHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+}
+
+# Test-specific settings
+SECRET_KEY = 'test-secret-key-for-<%= projectName %>'
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

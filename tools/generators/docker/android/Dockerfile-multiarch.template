@@ -1,0 +1,19 @@
+# Alternative Dockerfile using proven multi-architecture Android SDK image
+# This approach uses thyrlian/android-sdk which handles ARM64/x86_64 properly
+FROM thyrlian/android-sdk:latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Make gradlew executable and ensure proper permissions
+RUN chmod +x ./gradlew && \
+    find . -name "*.sh" -exec chmod +x {} \;
+
+# Download Gradle dependencies and verify setup
+RUN ./gradlew --version
+
+# Default command
+CMD ["./gradlew", "assembleDebug"]

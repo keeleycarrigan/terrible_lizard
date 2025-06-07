@@ -1,0 +1,274 @@
+# <%= className %>
+
+A modern Laravel 11 API application with Docker support, PostgreSQL database, and Redis caching.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Docker and Docker Compose
+- No local PHP, Composer, or database installation required!
+
+### Getting Started
+
+1. **Start the application:**
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Access the application:**
+   - **API Base URL:** http://localhost:8004
+   - **Health Check:** http://localhost:8004/api/health
+   - **API Documentation:** Available via routes
+   - **Database Admin:** http://localhost:8081 (run with `--profile admin`)
+
+3. **Stop the application:**
+   ```bash
+   docker-compose down
+   ```
+
+## 📋 Available Commands
+
+### Development Commands
+
+```bash
+# Start development server
+docker-compose up
+
+# Run tests
+docker-compose exec app composer test
+
+# Run linting
+docker-compose exec app composer lint
+
+# Fix code style
+docker-compose exec app composer lint:fix
+
+# Run database migrations
+docker-compose exec app php artisan migrate
+
+# Run database seeders
+docker-compose exec app php artisan db:seed
+
+# Fresh database with seeders
+docker-compose exec app composer fresh
+
+# Access Laravel shell
+docker-compose exec app php artisan tinker
+
+# View logs
+docker-compose logs -f app
+```
+
+### Production Commands
+
+```bash
+# Build production image
+docker build --target production -t <%= fileName %>:latest .
+
+# Run production container
+docker run -p 8004:80 <%= fileName %>:latest
+```
+
+## 🏗️ Architecture
+
+### Technology Stack
+
+- **Framework:** Laravel 11
+- **PHP Version:** 8.2
+- **Database:** PostgreSQL 15
+- **Cache:** Redis 7
+- **Web Server:** Nginx + PHP-FPM
+- **Process Manager:** Supervisor
+- **Testing:** PHPUnit
+
+### Project Structure
+
+```
+<%= fileName %>/
+├── app/                    # Application logic
+│   ├── Console/           # Artisan commands
+│   ├── Http/              # Controllers, middleware
+│   └── Models/            # Eloquent models
+├── bootstrap/             # Application bootstrap
+├── config/                # Configuration files
+├── database/              # Migrations, seeders, factories
+├── docker/                # Docker configuration
+├── public/                # Web server document root
+├── resources/             # Views, assets, lang files
+├── routes/                # Route definitions
+├── storage/               # Logs, cache, sessions
+├── tests/                 # Test files
+├── vendor/                # Composer dependencies
+├── .env                   # Environment configuration
+├── artisan                # Laravel command-line interface
+├── composer.json          # PHP dependencies
+├── docker-compose.yml     # Docker services
+└── Dockerfile             # Docker image definition
+```
+
+## 🔌 API Endpoints
+
+### Health Check
+- `GET /api/health` - Application health status
+
+### Items Resource
+- `GET /api/items` - List all items (with pagination)
+- `POST /api/items` - Create a new item
+- `GET /api/items/{id}` - Get a specific item
+- `PUT /api/items/{id}` - Update an item
+- `DELETE /api/items/{id}` - Delete an item
+
+### Query Parameters
+- `?page=1` - Pagination page number
+- `?limit=20` - Items per page (max 100)
+- `?search=term` - Search in name and description
+- `?active=true/false` - Filter by active status
+
+## 🧪 Testing
+
+The application includes comprehensive test coverage:
+
+```bash
+# Run all tests
+docker-compose exec app composer test
+
+# Run with coverage
+docker-compose exec app composer test:coverage
+
+# Run specific test file
+docker-compose exec app php artisan test tests/Feature/ItemTest.php
+
+# Run specific test method
+docker-compose exec app php artisan test --filter test_can_create_item
+```
+
+### Test Structure
+- **Feature Tests:** End-to-end API testing
+- **Unit Tests:** Individual component testing
+- **Database:** Uses SQLite in-memory for fast testing
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Key environment variables in `.env`:
+
+```env
+APP_NAME="<%= className %>"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8004
+
+DB_CONNECTION=pgsql
+DB_HOST=db
+DB_DATABASE=<%= fileName %>
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+
+CACHE_STORE=redis
+REDIS_HOST=redis
+```
+
+### Docker Services
+
+- **app:** Laravel application (port 8004)
+- **db:** PostgreSQL database (port 5435)
+- **redis:** Redis cache (port 6382)
+- **phpmyadmin:** Database admin interface (port 8081)
+
+## 🚀 Deployment
+
+### Production Build
+
+```bash
+# Build production image
+docker build --target production -t <%= fileName %>:production .
+
+# Run production container
+docker run -d \
+  -p 80:80 \
+  -e APP_ENV=production \
+  -e APP_DEBUG=false \
+  <%= fileName %>:production
+```
+
+### Environment Setup
+
+1. Copy `.env.example` to `.env`
+2. Update production environment variables
+3. Generate application key: `php artisan key:generate`
+4. Run migrations: `php artisan migrate --force`
+
+## 📊 Monitoring
+
+### Health Checks
+
+The `/api/health` endpoint provides comprehensive health information:
+
+- **Database connectivity**
+- **Redis connectivity**
+- **Memory usage**
+- **Application status**
+
+### Logs
+
+```bash
+# Application logs
+docker-compose logs -f app
+
+# Database logs
+docker-compose logs -f db
+
+# Redis logs
+docker-compose logs -f redis
+
+# Nginx access logs
+docker-compose exec app tail -f /var/log/nginx/<%= fileName %>_access.log
+
+# PHP-FPM error logs
+docker-compose exec app tail -f /var/log/php-fpm/error.log
+```
+
+## 🛠️ Development
+
+### Adding New Features
+
+1. **Create Model:** `php artisan make:model ModelName -m`
+2. **Create Controller:** `php artisan make:controller ModelController --api`
+3. **Add Routes:** Update `routes/api.php`
+4. **Create Tests:** `php artisan make:test ModelTest`
+5. **Run Migrations:** `php artisan migrate`
+
+### Code Quality
+
+```bash
+# Check code style
+docker-compose exec app composer lint
+
+# Fix code style
+docker-compose exec app composer lint:fix
+
+# Run static analysis
+docker-compose exec app composer analyse
+```
+
+## 📚 Laravel Resources
+
+- [Laravel Documentation](https://laravel.com/docs)
+- [Laravel API Resources](https://laravel.com/docs/eloquent-resources)
+- [Laravel Testing](https://laravel.com/docs/testing)
+- [Laravel Deployment](https://laravel.com/docs/deployment)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

@@ -1,0 +1,267 @@
+import { Application, type AppConfig } from './main';
+
+// Mock DOM for testing
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+describe('<%= projectName %> Application', () => {
+  let container: HTMLElement;
+  let config: AppConfig;
+
+  beforeEach(() => {
+    // Reset DOM
+    document.body.innerHTML = `
+      <div id="app">
+        <button id="counter">Count: 0</button>
+        <button id="theme-toggle">🌙</button>
+        <button id="reset-button">Reset</button>
+      </div>
+    `;
+    container = document.getElementById('app')!;
+
+    config = {
+      name: '<%= projectName %>',
+      version: '1.0.0',
+      debug: true,
+      theme: 'light'
+    };
+
+    // Clear mocks
+    jest.clearAllMocks();
+  });
+
+  describe('constructor and initialization', () => {
+    it('should create an application instance with correct config', () => {
+      const app = new Application(config);
+
+      expect(app.getStatus().config).toEqual(expect.objectContaining({
+        name: '<%= projectName %>',
+        version: '1.0.0',
+        debug: true,
+        theme: 'light'
+      }));
+    });
+
+    it('should initialize without errors', async () => {
+      const app = new Application(config);
+
+      await expect(app.init()).resolves.not.toThrow();
+
+      const status = app.getStatus();
+      expect(status.state.isInitialized).toBe(true);
+    });
+
+    it('should detect correct theme', () => {
+      const app = new Application(config);
+      const status = app.getStatus();
+
+      expect(status.state.currentTheme).toBe('light');
+    });
+  });
+
+  describe('interactive features', () => {
+    it('should handle counter button clicks', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      const counterBtn = document.getElementById('counter') as HTMLButtonElement;
+      expect(counterBtn).toBeTruthy();
+
+      // Initial state
+      expect(app.getStatus().state.clickCount).toBe(0);
+
+      // Simulate click
+      counterBtn.click();
+      expect(app.getStatus().state.clickCount).toBe(1);
+      expect(counterBtn.textContent).toBe('Count: 1');
+
+      // Multiple clicks
+      counterBtn.click();
+      counterBtn.click();
+      expect(app.getStatus().state.clickCount).toBe(3);
+      expect(counterBtn.textContent).toBe('Count: 3');
+    });
+
+    it('should handle theme toggle', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+      expect(themeToggle).toBeTruthy();
+
+      // Initial theme should be light
+      expect(app.getStatus().state.currentTheme).toBe('light');
+      expect(themeToggle.textContent).toBe('🌙');
+
+      // Toggle to dark
+      themeToggle.click();
+      expect(app.getStatus().state.currentTheme).toBe('dark');
+      expect(themeToggle.textContent).toBe('☀️');
+
+      // Toggle back to light
+      themeToggle.click();
+      expect(app.getStatus().state.currentTheme).toBe('light');
+      expect(themeToggle.textContent).toBe('🌙');
+    });
+
+    it('should handle reset button', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      const counterBtn = document.getElementById('counter') as HTMLButtonElement;
+      const resetBtn = document.getElementById('reset-button') as HTMLButtonElement;
+
+      // Click counter a few times
+      counterBtn.click();
+      counterBtn.click();
+      counterBtn.click();
+      expect(app.getStatus().state.clickCount).toBe(3);
+
+      // Reset counter
+      resetBtn.click();
+      expect(app.getStatus().state.clickCount).toBe(0);
+      expect(counterBtn.textContent).toBe('Count: 0');
+    });
+  });
+
+  describe('keyboard shortcuts', () => {
+    it('should handle spacebar for counter increment', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      // Simulate spacebar press on body
+      const spaceEvent = new KeyboardEvent('keydown', { key: ' ' });
+      Object.defineProperty(spaceEvent, 'target', { value: document.body });
+
+      document.dispatchEvent(spaceEvent);
+      expect(app.getStatus().state.clickCount).toBe(1);
+    });
+
+    it('should handle Ctrl+T for theme toggle', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      const initialTheme = app.getStatus().state.currentTheme;
+
+      const ctrlTEvent = new KeyboardEvent('keydown', {
+        key: 't',
+        ctrlKey: true
+      });
+
+      document.dispatchEvent(ctrlTEvent);
+      expect(app.getStatus().state.currentTheme).not.toBe(initialTheme);
+    });
+
+    it('should handle Ctrl+R for reset', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      // Increment counter first
+      const counterBtn = document.getElementById('counter') as HTMLButtonElement;
+      counterBtn.click();
+      counterBtn.click();
+      expect(app.getStatus().state.clickCount).toBe(2);
+
+      const ctrlREvent = new KeyboardEvent('keydown', {
+        key: 'r',
+        ctrlKey: true
+      });
+
+      document.dispatchEvent(ctrlREvent);
+      expect(app.getStatus().state.clickCount).toBe(0);
+    });
+  });
+
+  describe('configuration management', () => {
+    it('should merge config with defaults', () => {
+      const partialConfig = { name: 'Custom App' };
+      const app = new Application(partialConfig);
+
+      const status = app.getStatus();
+      expect(status.config.name).toBe('Custom App');
+      expect(status.config.version).toBe('1.0.0'); // Default value
+      expect(status.config.debug).toBe(false); // Default value
+    });
+
+    it('should handle auto theme detection', () => {
+      const autoConfig = { theme: 'auto' as const };
+      const app = new Application(autoConfig);
+
+      // Since we mocked matchMedia to return false (light theme)
+      expect(app.getStatus().state.currentTheme).toBe('light');
+    });
+  });
+
+  describe('DOM handling', () => {
+    it('should handle missing elements gracefully', async () => {
+      document.body.innerHTML = '<div id="app"></div>'; // Missing buttons
+
+      const app = new Application(config);
+
+      // Should not throw even with missing elements
+      await expect(app.init()).resolves.not.toThrow();
+    });
+
+    it('should update document title', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      const counterBtn = document.getElementById('counter') as HTMLButtonElement;
+      counterBtn.click();
+
+      expect(document.title).toBe('<%= projectName %> - Count: 1');
+    });
+  });
+
+  describe('cleanup', () => {
+    it('should cleanup resources on destroy', async () => {
+      const app = new Application(config);
+      await app.init();
+
+      expect(() => app.destroy()).not.toThrow();
+    });
+  });
+
+  describe('logging', () => {
+    it('should log messages when debug is enabled', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      const debugConfig = { ...config, debug: true };
+      const app = new Application(debugConfig);
+      await app.init();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[<%= projectName %>] Application instance created')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should not log messages when debug is disabled', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      const noDebugConfig = { ...config, debug: false };
+      const app = new Application(noDebugConfig);
+      await app.init();
+
+      // Should only see error logs, not debug logs
+      const debugCalls = consoleSpy.mock.calls.filter(call =>
+        call[0]?.includes('[<%= projectName %>] Application instance created')
+      );
+      expect(debugCalls).toHaveLength(0);
+
+      consoleSpy.mockRestore();
+    });
+  });
+});

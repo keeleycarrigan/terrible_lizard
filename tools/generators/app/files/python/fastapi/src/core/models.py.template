@@ -1,0 +1,39 @@
+"""
+Database Models
+
+SQLAlchemy models for the application.
+"""
+
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .database import Base
+
+
+class TimestampedModel(Base):
+    """Base model with timestamp fields."""
+    __abstract__ = True
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+
+class Item(TimestampedModel):
+    """Example Item model."""
+    __tablename__ = "items"
+
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    price: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Price in cents
+    is_active: Mapped[bool] = mapped_column(default=True)
+
+    def __repr__(self) -> str:
+        return f"<Item(id={self.id}, name='{self.name}', price={self.price})>"

@@ -1,0 +1,285 @@
+# <%= projectName %>
+
+A Django web application built with the Terrible Lizard monorepo generator.
+
+## 🚀 Quick Start
+
+### Using Docker (Recommended)
+
+```bash
+# Start the application
+pnpm nx serve <%= name %>
+
+# The application will be available at:
+# - Main app: http://localhost:8001
+# - Django admin: http://localhost:8001/admin/
+# - API health: http://localhost:8001/api/health/
+```
+
+### Local Development
+
+```bash
+# Navigate to the project directory
+cd apps/<%= name %>
+
+# Install dependencies
+poetry install
+
+# Set up the database
+poetry run python src/manage.py migrate
+
+# Create a superuser (optional)
+poetry run python src/manage.py createsuperuser
+
+# Run the development server
+poetry run python src/manage.py runserver 0.0.0.0:8000
+```
+
+## 📁 Project Structure
+
+```
+<%= name %>/
+├── src/
+│   ├── config/                 # Django project configuration
+│   │   ├── settings/          # Environment-specific settings
+│   │   │   ├── base.py        # Base settings
+│   │   │   ├── development.py # Development settings
+│   │   │   ├── production.py  # Production settings
+│   │   │   └── test.py        # Test settings
+│   │   ├── urls.py            # Main URL configuration
+│   │   ├── wsgi.py            # WSGI configuration
+│   │   └── asgi.py            # ASGI configuration
+│   ├── core/                  # Core application
+│   │   ├── models.py          # Database models
+│   │   ├── views.py           # Views and API endpoints
+│   │   ├── urls.py            # URL patterns
+│   │   ├── admin.py           # Django admin configuration
+│   │   └── apps.py            # App configuration
+│   └── manage.py              # Django management script
+├── tests/                     # Test files
+├── pyproject.toml            # Python dependencies and configuration
+├── Dockerfile                # Docker configuration
+├── docker-compose.yml        # Docker Compose configuration
+└── README.md                 # This file
+```
+
+## 🔧 Available Commands
+
+### Nx Commands (from workspace root)
+
+```bash
+# Serve the application
+pnpm nx serve <%= name %>
+
+# Run tests
+pnpm nx test <%= name %>
+
+# Lint the code
+pnpm nx lint <%= name %>
+
+# Build Docker image
+pnpm nx docker-build <%= name %>
+```
+
+### Django Management Commands
+
+```bash
+# Database migrations
+poetry run python src/manage.py makemigrations
+poetry run python src/manage.py migrate
+
+# Create superuser
+poetry run python src/manage.py createsuperuser
+
+# Collect static files
+poetry run python src/manage.py collectstatic
+
+# Django shell
+poetry run python src/manage.py shell
+
+# Run development server
+poetry run python src/manage.py runserver
+```
+
+## 🌐 API Endpoints
+
+### Health Check
+- `GET /api/health/` - Application health status
+
+### Core API
+- `GET /api/status/` - API status information
+- `GET /api/items/` - List example items (with pagination)
+- `POST /api/items/` - Create new example item
+
+### Admin Interface
+- `/admin/` - Django admin interface
+
+## 🗄️ Database
+
+### Development
+- **Local**: SQLite database (`db.sqlite3`)
+- **Docker**: PostgreSQL database
+
+### Production
+- PostgreSQL database (configured via environment variables)
+
+### Models
+
+#### ExampleModel
+- `name` (CharField): Name of the item
+- `description` (TextField): Optional description
+- `is_active` (BooleanField): Whether the item is active
+- `created_at` (DateTimeField): Creation timestamp
+- `updated_at` (DateTimeField): Last update timestamp
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pnpm nx test <%= name %>
+
+# Run tests with coverage
+poetry run pytest tests/ --cov=src --cov-report=html
+
+# Run specific test file
+poetry run pytest tests/test_models.py
+
+# Run tests with Django test runner
+poetry run python src/manage.py test
+```
+
+## 🔒 Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Django settings
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_SETTINGS_MODULE=config.settings.development
+DJANGO_LOG_LEVEL=INFO
+
+# Database (for Docker)
+USE_DOCKER=true
+DB_NAME=<%= moduleName %>_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+
+# Production settings
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+DJANGO_SECURE_SSL_REDIRECT=false
+
+# Email settings (production)
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=true
+EMAIL_HOST_USER=your-email@example.com
+EMAIL_HOST_PASSWORD=your-email-password
+DEFAULT_FROM_EMAIL=noreply@<%= projectName %>.com
+
+# Cache (production)
+REDIS_URL=redis://localhost:6379/1
+```
+
+## 🐳 Docker
+
+### Development with Docker
+
+```bash
+# Build and start services
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Production Docker
+
+```bash
+# Build production image
+docker build --target production -t <%= name %>:latest .
+
+# Run production container
+docker run -p 8001:8000 -e DJANGO_SETTINGS_MODULE=config.settings.production <%= name %>:latest
+```
+
+## 📊 Monitoring and Logging
+
+### Health Checks
+- Application health: `GET /api/health/`
+- Database connectivity: Included in health check
+- Django admin: Available at `/admin/`
+
+### Logging
+- Development: Console output with detailed formatting
+- Production: File logging with rotation
+- Test: Minimal logging for performance
+
+## 🚀 Deployment
+
+### Environment Setup
+1. Set production environment variables
+2. Configure database (PostgreSQL recommended)
+3. Set up static file serving (WhiteNoise included)
+4. Configure email backend
+5. Set up monitoring and logging
+
+### Production Checklist
+- [ ] Set `DEBUG = False`
+- [ ] Configure `ALLOWED_HOSTS`
+- [ ] Set secure `SECRET_KEY`
+- [ ] Configure database with SSL
+- [ ] Set up email backend
+- [ ] Configure static file serving
+- [ ] Set up monitoring
+- [ ] Configure logging
+- [ ] Set up backup strategy
+
+## 🔧 Development
+
+### Adding New Apps
+
+```bash
+# Create new Django app
+poetry run python src/manage.py startapp myapp src/myapp
+
+# Add to INSTALLED_APPS in settings/base.py
+LOCAL_APPS = [
+    'core.apps.CoreConfig',
+    'myapp.apps.MyappConfig',  # Add this line
+]
+```
+
+### Database Migrations
+
+```bash
+# Create migrations
+poetry run python src/manage.py makemigrations
+
+# Apply migrations
+poetry run python src/manage.py migrate
+
+# Show migration status
+poetry run python src/manage.py showmigrations
+```
+
+## 📚 Resources
+
+- [Django Documentation](https://docs.djangoproject.com/)
+- [Django REST Framework](https://www.django-rest-framework.org/)
+- [Poetry Documentation](https://python-poetry.org/docs/)
+- [Docker Documentation](https://docs.docker.com/)
+
+## 🤝 Contributing
+
+1. Follow the existing code style
+2. Write tests for new features
+3. Update documentation as needed
+4. Use conventional commit messages

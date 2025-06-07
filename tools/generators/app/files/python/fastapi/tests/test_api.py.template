@@ -1,0 +1,257 @@
+"""
+API Tests
+
+Test all API endpoints for functionality and edge cases.
+"""
+
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
+from httpx import AsyncClient
+
+from src.core.models import Item
+
+
+class TestHealthEndpoint:
+    """Test health check endpoint."""
+
+    def test_health_check(self, client: TestClient):
+        """Test health check returns correct status."""
+        response = client.get("/api/health")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "timestamp" in data
+        assert "version" in data
+
+
+class TestItemEndpoints:
+    """Test item CRUD endpoints."""
+
+    def test_create_item(self, client: TestClient):
+        """Test creating a new item."""
+        item_data = {
+            "name": "Test Item",
+            "description": "A test item",
+            "price": 1500,
+            "is_active": True,
+        }
+
+        response = client.post("/api/items", json=item_data)
+
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["name"] == item_data["name"]
+        assert data["description"] == item_data["description"]
+        assert data["price"] == item_data["price"]
+        assert data["is_active"] == item_data["is_active"]
+        assert "id" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+    def test_create_item_minimal(self, client: TestClient):
+        """Test creating an item with minimal data."""
+        item_data = {"name": "Minimal Item"}
+
+        response = client.post("/api/items", json=item_data)
+
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["name"] == "Minimal Item"
+        assert data["description"] is None
+        assert data["price"] is None
+        assert data["is_active"] is True
+
+    def test_create_item_validation_error(self, client: TestClient):
+        """Test creating an item with invalid data."""
+        item_data = {"name": ""}  # Empty name should fail
+
+        response = client.post("/api/items", json=item_data)
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_get_item(self, client: TestClient, sample_item: Item):
+        """Test getting a single item."""
+        response = client.get(f"/api/items/{sample_item.id}")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == sample_item.id
+        assert data["name"] == sample_item.name
+        assert data["description"] == sample_item.description
+        assert data["price"] == sample_item.price
+
+    def test_get_item_not_found(self, client: TestClient):
+        """Test getting a non-existent item."""
+        response = client.get("/api/items/99999")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        assert "not found" in data["detail"].lower()
+
+    def test_list_items_empty(self, client: TestClient):
+        """Test listing items when none exist."""
+        response = client.get("/api/items")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["items"] == []
+        assert data["total"] == 0
+        assert data["limit"] == 20
+        assert data["offset"] == 0
+        assert data["has_more"] is False
+
+    def test_list_items_with_data(self, client: TestClient, sample_items: list[Item]):
+        """Test listing items with pagination."""
+        response = client.get("/api/items?limit=3&offset=0")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 3
+        assert data["total"] == 5
+        assert data["limit"] == 3
+        assert data["offset"] == 0
+        assert data["has_more"] is True
+
+    def test_list_items_pagination(self, client: TestClient, sample_items: list[Item]):
+        """Test pagination with different parameters."""
+        response = client.get("/api/items?limit=2&offset=3")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["total"] == 5
+        assert data["limit"] == 2
+        assert data["offset"] == 3
+        assert data["has_more"] is False
+
+    def test_update_item(self, client: TestClient, sample_item: Item):
+        """Test updating an item."""
+        update_data = {
+            "name": "Updated Item",
+            "price": 2000,
+        }
+
+        response = client.put(f"/api/items/{sample_item.id}", json=update_data)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == "Updated Item"
+        assert data["price"] == 2000
+        assert data["description"] == sample_item.description  # Unchanged
+
+    def test_update_item_not_found(self, client: TestClient):
+        """Test updating a non-existent item."""
+        update_data = {"name": "Updated Item"}
+
+        response = client.put("/api/items/99999", json=update_data)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_item(self, client: TestClient, sample_item: Item):
+        """Test deleting an item."""
+        response = client.delete(f"/api/items/{sample_item.id}")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify item is deleted
+        get_response = client.get(f"/api/items/{sample_item.id}")
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_item_not_found(self, client: TestClient):
+        """Test deleting a non-existent item."""
+        response = client.delete("/api/items/99999")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+class TestAsyncEndpoints:
+    """Test endpoints using async client."""
+
+    @pytest.mark.asyncio
+    async def test_async_health_check(self, async_client: AsyncClient):
+        """Test health check with async client."""
+        response = await async_client.get("/api/health")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "healthy"
+
+    @pytest.mark.asyncio
+    async def test_async_create_and_get_item(self, async_client: AsyncClient):
+        """Test creating and retrieving an item with async client."""
+        # Create item
+        item_data = {
+            "name": "Async Test Item",
+            "description": "Created with async client",
+            "price": 999,
+        }
+
+        create_response = await async_client.post("/api/items", json=item_data)
+        assert create_response.status_code == status.HTTP_201_CREATED
+        created_item = create_response.json()
+
+        # Get item
+        get_response = await async_client.get(f"/api/items/{created_item['id']}")
+        assert get_response.status_code == status.HTTP_200_OK
+        retrieved_item = get_response.json()
+
+        assert retrieved_item["name"] == item_data["name"]
+        assert retrieved_item["description"] == item_data["description"]
+        assert retrieved_item["price"] == item_data["price"]
+
+
+class TestAPIValidation:
+    """Test API validation and error handling."""
+
+    def test_validation_errors(self, client: TestClient):
+        """Test validation error responses."""
+        # Test empty name validation
+        response = client.post("/api/items", json={"name": ""})
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+        # Test invalid price type
+        response = client.post("/api/items", json={"name": "Test", "price": "invalid"})
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_method_not_allowed(self, client: TestClient):
+        """Test method not allowed responses."""
+        # PATCH is not implemented for items
+        response = client.patch("/api/items/1", json={"name": "Test"})
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+    def test_pagination_params(self, client: TestClient):
+        """Test edge cases for pagination parameters."""
+        # Test large limit (should be valid)
+        response = client.get("/api/items?limit=50")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["limit"] == 50
+
+        # Test zero offset
+        response = client.get("/api/items?offset=0")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_list_items_inactive_filter(self, client: TestClient):
+        """Test listing items with active_only=False."""
+        # Create an inactive item
+        response = client.post("/api/items", json={"name": "Inactive Item", "is_active": False})
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Test with active_only=False - should see inactive item
+        response = client.get("/api/items?active_only=false")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] >= 1  # Should have at least the inactive item
+
+    def test_update_item_partial(self, client: TestClient, sample_item: Item):
+        """Test partial update of an item."""
+        # Update only the name
+        response = client.put(f"/api/items/{sample_item.id}", json={"name": "New Name Only"})
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["name"] == "New Name Only"
+        assert data["description"] == sample_item.description  # Should remain unchanged
+        assert data["price"] == sample_item.price  # Should remain unchanged

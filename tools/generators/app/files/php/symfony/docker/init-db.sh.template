@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Wait for database to be ready
+echo "Waiting for database connection..."
+until php bin/console dbal:run-sql "SELECT 1" > /dev/null 2>&1; do
+    echo "Database not ready, waiting..."
+    sleep 2
+done
+
+echo "Database connected successfully!"
+
+# Always try to create database schema - Doctrine will handle existing tables gracefully
+echo "Creating database schema..."
+php bin/console doctrine:schema:create --no-interaction
+if [ $? -eq 0 ]; then
+    echo "Database schema created successfully!"
+else
+    echo "Schema creation failed, trying to update instead..."
+    php bin/console doctrine:schema:update --force --no-interaction
+    if [ $? -eq 0 ]; then
+        echo "Database schema updated successfully!"
+    else
+        echo "Error with database schema!" >&2
+        exit 1
+    fi
+fi
+
+echo "Database initialization complete!"

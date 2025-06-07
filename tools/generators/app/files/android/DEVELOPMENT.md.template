@@ -1,0 +1,285 @@
+# Android Development Guide
+
+This guide covers how to develop, build, and test your <%= name %> Android application.
+
+## 🚀 Quick Start
+
+### Option 1: Docker Development (Recommended)
+
+The easiest way to get started is with Docker, which provides a consistent environment with Java 17, Android SDK, and all build tools pre-installed.
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or use Nx commands
+pnpm nx docker-build <%= projectName %>
+pnpm nx docker-run <%= projectName %>
+```
+
+### Option 2: Local Development
+
+For local development, ensure you have the prerequisites installed:
+
+#### Prerequisites
+- **Java 17+** (Android SDK Command Line Tools require Java 17)
+- **Android Studio** (includes Android SDK)
+- **Git**
+
+#### Setup Steps
+
+1. **Install Java 17+**
+   ```bash
+   # macOS (using Homebrew)
+   brew install openjdk@17
+
+   # Ubuntu/Debian
+   sudo apt-get install openjdk-17-jdk
+
+   # Windows (using Chocolatey)
+   choco install openjdk17
+   ```
+
+2. **Install Android Studio**
+   - Download from: https://developer.android.com/studio
+   - Or via Homebrew: `brew install --cask android-studio`
+
+3. **Setup Gradle Wrapper**
+   ```bash
+   cd <%= projectRoot %>
+
+   # Make gradlew executable (gradle-wrapper.jar is already included)
+   chmod +x gradlew
+   ```
+
+4. **Build the project**
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+## 🛠️ Development Commands
+
+### Using Nx (Recommended)
+
+```bash
+# Build debug APK
+pnpm nx build <%= projectName %>
+
+# Build release APK
+pnpm nx build <%= projectName %> --configuration=production
+
+# Run unit tests
+pnpm nx test <%= projectName %>
+
+# Run instrumentation tests (requires device/emulator)
+pnpm nx test-ui <%= projectName %>
+
+# Lint code
+pnpm nx lint <%= projectName %>
+
+# Format code
+pnpm nx format <%= projectName %>
+
+# Static analysis
+pnpm nx analyze <%= projectName %>
+
+# Clean build artifacts
+pnpm nx clean <%= projectName %>
+```
+
+### Using Gradle Directly
+
+```bash
+# Build commands
+./gradlew assembleDebug          # Build debug APK
+./gradlew assembleRelease        # Build release APK
+./gradlew bundle                 # Build Android App Bundle
+
+# Test commands
+./gradlew test                   # Run unit tests
+./gradlew connectedAndroidTest   # Run instrumentation tests
+
+# Code quality
+./gradlew ktlintCheck           # Lint Kotlin code
+./gradlew ktlintFormat          # Format Kotlin code
+./gradlew detekt                # Static analysis
+
+# Install on device
+./gradlew installDebug          # Install debug APK
+./gradlew installRelease        # Install release APK
+```
+
+### Using Docker
+
+```bash
+# Build with Docker (default)
+docker-compose up build
+
+# Interactive development container
+docker-compose run --rm android-app bash
+
+# Run specific Gradle commands in Docker
+docker-compose run --rm android-app ./gradlew test
+docker-compose run --rm android-app ./gradlew assembleRelease
+```
+
+### Apple Silicon (ARM64) Support
+
+If you're on Apple Silicon and encounter architecture issues, use alternative Docker images:
+
+```bash
+# Option 1: Use thyrlian/android-sdk (better ARM64 support)
+docker-compose --profile multiarch up android-app-multiarch
+
+# Option 2: Use Google Cloud Build image
+docker-compose --profile gcb up android-app-gcb
+
+# Run builds with alternative images
+docker-compose --profile multiarch run --rm android-app-multiarch ./gradlew assembleDebug
+```
+
+## 📱 Device Testing
+
+### Android Emulator
+
+1. **Create AVD (Android Virtual Device)**
+   ```bash
+   # List available system images
+   sdkmanager --list | grep system-images
+
+   # Install a system image
+   sdkmanager "system-images;android-34;google_apis;x86_64"
+
+   # Create AVD
+   avdmanager create avd --name "Pixel_7_API_34" --package "system-images;android-34;google_apis;x86_64"
+
+   # Start emulator
+   emulator @Pixel_7_API_34
+   ```
+
+2. **Install and test**
+   ```bash
+   ./gradlew installDebug
+   pnpm nx test-ui <%= projectName %>
+   ```
+
+### Physical Device
+
+1. **Enable Developer Options** on your Android device
+2. **Enable USB Debugging**
+3. **Connect device** and verify:
+   ```bash
+   adb devices
+   ```
+4. **Install and test**:
+   ```bash
+   ./gradlew installDebug
+   ```
+
+## 🔧 Project Structure
+
+```
+<%= projectRoot %>/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/<%= packagePath %>/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── MainScreen.kt
+│   │   │   │   └── ui/theme/
+│   │   │   ├── res/
+│   │   │   └── AndroidManifest.xml
+│   │   ├── test/                    # Unit tests
+│   │   └── androidTest/             # Instrumentation tests
+│   ├── build.gradle.kts            # App module build config
+│   └── proguard-rules.pro          # ProGuard rules
+├── gradle/wrapper/                  # Gradle wrapper files
+├── build.gradle.kts                # Root build config
+├── settings.gradle.kts              # Project settings
+├── detekt.yml                       # Static analysis config
+├── docker-compose.yml               # Docker setup
+├── Dockerfile                       # Docker image
+└── project.json                     # Nx configuration
+```
+
+## 🎨 Customization
+
+### Adding Dependencies
+
+Edit `app/build.gradle.kts`:
+
+```kotlin
+dependencies {
+    // Add your dependencies here
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
+
+    // Testing
+    testImplementation("io.mockk:mockk:1.13.8")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+```
+
+### Modifying Build Configuration
+
+- **App-level config**: `app/build.gradle.kts`
+- **Project-level config**: `build.gradle.kts`
+- **Gradle properties**: `gradle.properties`
+
+### Code Quality Rules
+
+- **KtLint**: Kotlin code formatting (config in `app/build.gradle.kts`)
+- **Detekt**: Static analysis rules (`detekt.yml`)
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **"Could not resolve com.android.tools.build:gradle"**
+   - Ensure you're using Java 17+ (not Java 8 or 11)
+   - Check JAVA_HOME environment variable
+
+2. **"SDK location not found"**
+   - Set ANDROID_HOME environment variable
+   - Or create `local.properties` with `sdk.dir=/path/to/android/sdk`
+
+3. **"gradlew: Permission denied"**
+   ```bash
+   chmod +x gradlew
+   ```
+
+4. **Build errors with Docker**
+   ```bash
+   # Clean and rebuild
+   docker-compose down
+   docker-compose build --no-cache
+   docker-compose up
+   ```
+
+### Environment Variables
+
+```bash
+# Required for Android development
+export ANDROID_HOME=/path/to/android/sdk
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+
+# Required for Gradle (Java 17+)
+export JAVA_HOME=/path/to/java17
+export PATH=$PATH:$JAVA_HOME/bin
+```
+
+## 📚 Additional Resources
+
+- [Android Developer Guide](https://developer.android.com/guide)
+- [Jetpack Compose Documentation](https://developer.android.com/jetpack/compose)
+- [Kotlin Documentation](https://kotlinlang.org/docs/)
+- [Gradle User Guide](https://docs.gradle.org/current/userguide/userguide.html)
+- [Material Design 3](https://m3.material.io/)
+
+## 🤝 Support
+
+For issues specific to this generated project structure, check:
+1. This `DEVELOPMENT.md` guide
+2. Project README.md
+3. Nx documentation for additional commands

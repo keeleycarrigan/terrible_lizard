@@ -1,0 +1,326 @@
+# <%= name %>
+
+A modern, high-performance API built with FastAPI.
+
+## Features
+
+- **FastAPI**: Modern, fast (high-performance) web framework for building APIs
+- **Async Support**: Fully asynchronous with async/await patterns
+- **SQLAlchemy 2.0**: Modern async ORM with declarative models
+- **PostgreSQL**: Production-ready database with async driver
+- **Pydantic v2**: Data validation and serialization with type hints
+- **Docker**: Full containerization with multi-stage builds
+- **Auto Documentation**: Interactive API docs with OpenAPI/Swagger
+- **Type Safety**: Complete type hints throughout the codebase
+- **Testing**: Comprehensive test suite with pytest and async support
+- **Code Quality**: Ruff linting, Black formatting, MyPy type checking
+
+## Quick Start
+
+### Using Docker (Recommended)
+
+1. **Start the application:**
+   ```bash
+   pnpm nx serve <%= name %>
+   ```
+
+2. **Access the application:**
+   - API: http://localhost:8002
+   - Interactive Docs: http://localhost:8002/docs
+   - ReDoc: http://localhost:8002/redoc
+   - Health Check: http://localhost:8002/api/health
+
+### Manual Setup
+
+1. **Install dependencies:**
+   ```bash
+   cd apps/<%= name %>
+   poetry install
+   ```
+
+2. **Set up environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start PostgreSQL:**
+   ```bash
+   docker run -d \
+     --name <%= name %>-postgres \
+     -e POSTGRES_DB=<%= name.replace('-', '_') %>_db \
+     -e POSTGRES_USER=postgres \
+     -e POSTGRES_PASSWORD=password \
+     -p 5434:5432 \
+     postgres:15-alpine
+   ```
+
+4. **Run the application:**
+   ```bash
+   poetry run uvicorn src.main:app --reload --port 8000
+   ```
+
+## API Documentation
+
+### Base URL
+- Development: `http://localhost:8002`
+- Production: `https://your-domain.com`
+
+### Authentication
+Currently, the API is open. Authentication can be added using FastAPI's security utilities.
+
+### Endpoints
+
+#### Health Check
+```http
+GET /api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2023-12-07T10:30:00Z",
+  "version": "0.1.0"
+}
+```
+
+#### Items CRUD
+
+**List Items**
+```http
+GET /api/items?limit=20&offset=0&active_only=true
+```
+
+**Create Item**
+```http
+POST /api/items
+Content-Type: application/json
+
+{
+  "name": "New Item",
+  "description": "Item description",
+  "price": 1500,
+  "is_active": true
+}
+```
+
+**Get Item**
+```http
+GET /api/items/{item_id}
+```
+
+**Update Item**
+```http
+PUT /api/items/{item_id}
+Content-Type: application/json
+
+{
+  "name": "Updated Item",
+  "price": 2000
+}
+```
+
+**Delete Item**
+```http
+DELETE /api/items/{item_id}
+```
+
+### Response Format
+
+All responses follow a consistent format:
+
+**Success Response:**
+```json
+{
+  "id": 1,
+  "name": "Item Name",
+  "description": "Item description",
+  "price": 1500,
+  "is_active": true,
+  "created_at": "2023-12-07T10:30:00Z",
+  "updated_at": "2023-12-07T10:30:00Z"
+}
+```
+
+**Error Response:**
+```json
+{
+  "detail": "Error message",
+  "error_code": "OPTIONAL_ERROR_CODE"
+}
+```
+
+**Paginated Response:**
+```json
+{
+  "items": [...],
+  "total": 100,
+  "limit": 20,
+  "offset": 0,
+  "has_more": true
+}
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm nx test <%= name %>
+
+# Run with coverage
+poetry run pytest --cov=src --cov-report=html
+
+# Run specific test file
+poetry run pytest tests/test_api.py
+
+# Run with asyncio mode
+poetry run pytest -v tests/test_api.py::TestItemEndpoints::test_create_item
+```
+
+### Code Quality
+
+```bash
+# Lint code
+pnpm nx lint <%= name %>
+
+# Format code
+poetry run black src tests
+
+# Type checking
+poetry run mypy src
+
+# Run all quality checks
+poetry run ruff check src tests
+```
+
+### Database Migrations
+
+This template uses SQLAlchemy with automatic table creation in development. For production, consider using Alembic:
+
+```bash
+# Initialize Alembic (if needed)
+poetry run alembic init migrations
+
+# Generate migration
+poetry run alembic revision --autogenerate -m "Add new table"
+
+# Apply migrations
+poetry run alembic upgrade head
+```
+
+### Adding New Endpoints
+
+1. **Define Pydantic schemas** in `src/api/schemas.py`
+2. **Create database models** in `src/core/models.py`
+3. **Add route handlers** in `src/api/routes.py`
+4. **Write tests** in `tests/test_api.py`
+
+Example:
+```python
+# In src/api/schemas.py
+class UserCreate(BaseSchema):
+    name: str
+    email: str
+
+# In src/core/models.py
+class User(TimestampedModel):
+    __tablename__ = "users"
+
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255), unique=True)
+
+# In src/api/routes.py
+@api_router.post("/users", response_model=UserResponse)
+async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    user = User(**user_data.model_dump())
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return UserResponse.model_validate(user)
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with:
+
+```env
+# Application
+ENVIRONMENT=development
+DEBUG=true
+SECRET_KEY=your-secret-key-change-this-in-production
+
+# Database
+DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5434/<%= name.replace('-', '_') %>_db
+
+# Security
+ALLOWED_HOSTS=["localhost", "127.0.0.1", "0.0.0.0"]
+CORS_ORIGINS=["http://localhost:3000", "http://localhost:8080"]
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+### Docker Configuration
+
+- **Development**: Hot reloading with volume mounts
+- **Production**: Multi-stage build with optimized image
+- **Database**: PostgreSQL with persistent volumes
+- **Redis**: Optional caching layer (included in docker-compose)
+
+## Production Deployment
+
+### Docker
+
+```bash
+# Build production image
+docker build -t <%= name %>:latest .
+
+# Run production container
+docker run -d \
+  --name <%= name %> \
+  -p 8000:8000 \
+  -e DATABASE_URL=your-production-db-url \
+  -e SECRET_KEY=your-production-secret \
+  <%= name %>:latest
+```
+
+### Performance Considerations
+
+- **Workers**: Use multiple Uvicorn workers for production
+- **Database**: Use connection pooling and proper indexes
+- **Caching**: Implement Redis for frequently accessed data
+- **Monitoring**: Add logging and metrics collection
+- **Security**: Implement authentication, rate limiting, and HTTPS
+
+## Architecture
+
+```
+src/
+├── main.py              # FastAPI application factory
+├── core/                # Core application modules
+│   ├── config.py        # Configuration management
+│   ├── database.py      # Database connection and session
+│   └── models.py        # SQLAlchemy models
+└── api/                 # API layer
+    ├── routes.py        # API route handlers
+    └── schemas.py       # Pydantic schemas
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes and add tests
+4. Run the test suite: `pnpm nx test <%= name %>`
+5. Commit your changes: `git commit -am 'Add feature'`
+6. Push to the branch: `git push origin feature-name`
+7. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

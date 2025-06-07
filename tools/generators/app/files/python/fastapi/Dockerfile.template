@@ -1,0 +1,92 @@
+# Multi-stage Dockerfile for FastAPI applications
+# Development stage
+FROM python:3.11-slim AS development
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install poetry
+
+# Configure Poetry - disable virtual environments in Docker
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VENV_IN_PROJECT=0 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
+# Copy Poetry files
+COPY pyproject.toml poetry.lock* ./
+
+# Install dependencies globally (no virtual environment)
+RUN poetry config virtualenvs.create false && \
+    poetry install --with dev && \
+    rm -rf $POETRY_CACHE_DIR
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Default development command
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# Production stage
+FROM python:3.11-slim as runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install poetry
+
+# Configure Poetry for production - disable virtual environments in Docker
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VENV_IN_PROJECT=0 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
+# Copy Poetry files
+COPY pyproject.toml poetry.lock* ./
+
+# Install only production dependencies globally
+RUN poetry config virtualenvs.create false && \
+    poetry install --only=main --no-dev && \
+    rm -rf $POETRY_CACHE_DIR
+
+# Create app user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Set work directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=appuser:appuser src/ ./src/
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown appuser:appuser /app/logs
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/api/health', timeout=10)"
+
+# Default command
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

@@ -1,0 +1,68 @@
+"""
+Model Tests
+
+Test SQLAlchemy models for correct behavior and validation.
+"""
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.models import Item, TimestampedModel
+
+
+class TestTimestampedModel:
+    """Test the base TimestampedModel class."""
+
+    @pytest.mark.asyncio
+    async def test_timestamps_set_on_creation(self, db_session: AsyncSession):
+        """Test that timestamps are automatically set when creating a model."""
+        item = Item(name="Test Item")
+        db_session.add(item)
+        await db_session.commit()
+        await db_session.refresh(item)
+
+        assert item.created_at is not None
+        assert item.updated_at is not None
+        assert item.created_at == item.updated_at  # Should be same on creation
+
+    @pytest.mark.asyncio
+    async def test_updated_at_changes_on_update(self, db_session: AsyncSession):
+        """Test that updated_at changes when model is updated."""
+        import asyncio
+
+        item = Item(name="Test Item")
+        db_session.add(item)
+        await db_session.commit()
+        await db_session.refresh(item)
+
+        original_updated_at = item.updated_at
+
+        # Add a delay to ensure timestamp difference (SQLite has second precision)
+        await asyncio.sleep(1.1)
+
+        # Update the item
+        item.name = "Updated Item"
+        await db_session.commit()
+        await db_session.refresh(item)
+
+        assert item.updated_at > original_updated_at
+
+
+class TestItemModel:
+    """Test the Item model."""
+
+    @pytest.mark.asyncio
+    async def test_item_creation_minimal(self, db_session: AsyncSession):
+        """Test creating an item with minimal required fields."""
+        item = Item(name="Test Item")
+        db_session.add(item)
+        await db_session.commit()
+        await db_session.refresh(item)
+
+        assert item.id is not None
+        assert item.name == "Test Item"
+        assert item.description is None
+        assert item.price is None
+        assert item.is_active is True  # Default value
+        assert item.created_at is not None
+        assert item.updated_at is not None

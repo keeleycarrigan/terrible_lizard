@@ -1,0 +1,27 @@
+# Build outputs
+app/build/
+build/
+*.apk
+*.aab
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Version control
+.git/
+.gitignore
+
+# Local configuration
+local.properties
+gradle.properties.local
+
+# Gradle cache (we use volumes for this)
+.gradle/
+
+# Other
+*.log
+node_modules/
+.nx/

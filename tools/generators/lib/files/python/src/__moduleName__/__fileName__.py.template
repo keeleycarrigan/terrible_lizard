@@ -1,0 +1,103 @@
+"""
+<%= name %> - Main library module
+
+This module provides the core functionality for the <%= name %> library.
+"""
+
+import logging
+from typing import Optional, Dict, Any
+
+logger = logging.getLogger(__name__)
+
+
+class <%= className %>:
+    """
+    Main class for <%= name %> library.
+
+    This class provides reusable functionality that can be imported
+    and used by other projects in the monorepo.
+
+    Attributes:
+        name: The name of the library instance
+        config: Configuration dictionary
+    """
+
+    def __init__(self, name: str = "<%= name %>", config: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the <%= className %> instance.
+
+        Args:
+            name: Name for this instance
+            config: Optional configuration dictionary
+        """
+        self.name = name
+        self.config = config or {}
+        logger.info(f"Initialized <%= className %> instance: {name}")
+
+    def process(self, data: Any) -> Any:
+        """
+        Process input data and return the result.
+
+        This is a placeholder method that should be implemented
+        with your library's specific functionality.
+
+        Args:
+            data: Input data to process
+
+        Returns:
+            Processed data
+        """
+        logger.debug(f"Processing data with {self.name}")
+
+        # TODO: Implement your library's core functionality here
+        return data
+
+    def get_info(self) -> Dict[str, Any]:
+        """
+        Get information about this library instance.
+
+        Returns:
+            Dictionary containing instance information
+        """
+        return {
+            "name": self.name,
+            "config": self.config,
+            "version": "0.1.0"
+        }
+
+    def __str__(self) -> str:
+        """String representation of the instance."""
+        return f"<%= className %>(name='{self.name}')"
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation of the instance."""
+        return f"<%= className %>(name='{self.name}', config={self.config})"
+
+
+# Convenience functions for common operations
+def create_<%= fileName %>(**kwargs) -> <%= className %>:
+    """
+    Create a new <%= className %> instance with configuration.
+
+    Args:
+        **kwargs: Configuration arguments
+
+    Returns:
+        Configured <%= className %> instance
+    """
+    return <%= className %>(**kwargs)
+
+
+def quick_process(data: Any, name: str = "quick") -> Any:
+    """
+    Quick utility function for one-off processing.
+
+    Args:
+        data: Data to process
+        name: Name for the processor instance
+
+    Returns:
+        Processed data
+    """
+    processor = <%= className %>(name=name)
+    return processor.process(data)

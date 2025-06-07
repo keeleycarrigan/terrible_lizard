@@ -1,0 +1,278 @@
+# <%= name %>
+
+<%= description %>
+
+A modern Android application built with **Kotlin**, **Jetpack Compose**, and **Material Design 3**.
+
+## 🚀 Quick Start Guide
+
+### Method 1: Android Studio (Recommended for Most Developers)
+
+**Step 1: Open Project**
+```bash
+# Open the entire project directory in Android Studio
+open -a "Android Studio" .
+
+# Or manually: File > Open > Select this project folder
+```
+
+**Step 2: Wait for Sync**
+- Android Studio will automatically import the Gradle project
+- Wait for "Gradle sync" to complete (progress bar in bottom status)
+- Android Studio will download any missing SDK components
+
+**Step 3: Run the App**
+- Click the green ▶️ "Run" button in the toolbar
+- Or press `Ctrl+R` (Mac) / `Ctrl+F10` (Windows/Linux)
+- Choose an emulator or connected device
+- App will build and launch automatically
+
+**That's it!** 🎉 Your app is now running.
+
+### Method 2: Command Line Development
+
+**Step 1: Prerequisites Check**
+```bash
+# Check Java version (need Java 17+)
+java -version
+
+# If Java 17+ not installed:
+# macOS: brew install openjdk@17
+# Ubuntu: sudo apt-get install openjdk-17-jdk
+```
+
+**Step 2: Make Gradle Executable**
+```bash
+chmod +x gradlew
+```
+
+**Step 3: Build the App**
+```bash
+# Build debug APK
+./gradlew assembleDebug
+
+# Build release APK
+./gradlew assembleRelease
+```
+
+**Step 4: Install on Device/Emulator**
+```bash
+# Install debug version
+./gradlew installDebug
+
+# Or install release version
+./gradlew installRelease
+```
+
+### Method 3: Docker Development (Zero Local Setup)
+
+**Step 1: Build with Docker**
+```bash
+# Build and run the development environment
+docker-compose up --build
+
+# Or just build the APK
+docker-compose run --rm android-app ./gradlew assembleDebug
+```
+
+**Step 2: Access Built APK**
+```bash
+# APK will be in: app/build/outputs/apk/debug/
+ls -la app/build/outputs/apk/debug/
+```
+
+## 📱 Setting Up Emulator (Android Studio)
+
+**Step 1: Open AVD Manager**
+- In Android Studio: Tools > AVD Manager
+- Or click the phone icon 📱 in the toolbar
+
+**Step 2: Create Virtual Device**
+- Click "Create Virtual Device"
+- Choose "Phone" > "Pixel 7" (recommended)
+- Click "Next"
+
+**Step 3: Select System Image**
+- ⚠️ **IMPORTANT**: Choose **API 34** (UpsideDownCake) or minimum **API 24+**
+- This app requires **Android 7.0+ (API 24)** - lower versions will crash immediately
+- Click "Download" if not already installed
+- Click "Next" > "Finish"
+
+**Step 4: Start Emulator**
+- Click the ▶️ play button next to your AVD
+- Wait for emulator to boot up
+- Now you can run your app!
+
+## 🧪 Testing Your App
+
+### Run Tests in Android Studio
+- Right-click on `src/test` folder
+- Select "Run 'Tests in test...'"
+- View results in the "Run" panel
+
+### Run Tests from Command Line
+```bash
+# Unit tests
+./gradlew test
+
+# UI/Integration tests (requires device/emulator)
+./gradlew connectedAndroidTest
+
+# With Nx
+pnpm nx test <%= projectName %>
+pnpm nx test-ui <%= projectName %>
+```
+
+## 🛠️ Development Commands
+
+### Using Nx (Recommended)
+```bash
+# Build commands
+pnpm nx build <%= projectName %>                    # Build debug APK
+pnpm nx build <%= projectName %> --configuration=production  # Build release APK
+
+# Testing
+pnpm nx test <%= projectName %>                     # Run unit tests
+pnpm nx test-ui <%= projectName %>                  # Run UI tests (needs device)
+
+# Code quality
+pnpm nx lint <%= projectName %>                     # Lint Kotlin code
+pnpm nx format <%= projectName %>                   # Format code
+pnpm nx analyze <%= projectName %>                  # Static analysis
+
+# Utilities
+pnpm nx clean <%= projectName %>                    # Clean build files
+pnpm nx install-debug <%= projectName %>            # Install debug APK
+pnpm nx install-release <%= projectName %>          # Install release APK
+```
+
+### Using Gradle Directly
+```bash
+# Build
+./gradlew assembleDebug                # Build debug APK
+./gradlew assembleRelease              # Build release APK
+./gradlew bundle                       # Build Android App Bundle
+
+# Test
+./gradlew test                         # Unit tests
+./gradlew connectedAndroidTest         # UI tests
+
+# Code quality
+./gradlew ktlintCheck                  # Check Kotlin style
+./gradlew ktlintFormat                 # Fix Kotlin style
+./gradlew detekt                       # Static analysis
+
+# Install
+./gradlew installDebug                 # Install debug APK
+./gradlew installRelease               # Install release APK
+```
+
+## 📁 Project Structure
+
+```
+<%= name %>/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/                 # Kotlin source code
+│   │   │   │   ├── MainActivity.kt     # Main activity
+│   │   │   │   ├── MainScreen.kt       # Main Compose screen
+│   │   │   │   └── ui/theme/           # Material Design theme
+│   │   │   ├── res/                    # Android resources
+│   │   │   │   ├── values/             # Strings, colors, etc.
+│   │   │   │   └── mipmap-*/           # App icons
+│   │   │   └── AndroidManifest.xml     # App configuration
+│   │   ├── test/                       # Unit tests
+│   │   └── androidTest/                # UI/Integration tests
+│   └── build.gradle.kts                # App module build config
+├── gradle/wrapper/                     # Gradle wrapper files
+├── build.gradle.kts                    # Project build config
+├── settings.gradle.kts                 # Project settings
+├── detekt.yml                          # Static analysis rules
+├── docker-compose.yml                  # Docker development setup
+├── Dockerfile                          # Docker image definition
+├── DEVELOPMENT.md                      # Detailed development guide
+└── project.json                        # Nx configuration
+```
+
+## 🎨 Customization
+
+### Adding Dependencies
+Edit `app/build.gradle.kts`:
+```kotlin
+dependencies {
+    // Add new dependencies here
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
+
+    // For testing
+    testImplementation("io.mockk:mockk:1.13.8")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+```
+
+### Modifying the UI
+- **Main screen**: Edit `app/src/main/kotlin/.../MainScreen.kt`
+- **Theme/colors**: Edit files in `app/src/main/kotlin/.../ui/theme/`
+- **App name**: Edit `app/src/main/res/values/strings.xml`
+
+## 🚨 Troubleshooting
+
+### "Could not resolve dependencies"
+```bash
+# Clean and rebuild
+./gradlew clean
+./gradlew assembleDebug
+```
+
+### "SDK location not found"
+- **Option 1**: Set environment variable: `export ANDROID_HOME=/path/to/android/sdk`
+- **Option 2**: Create `local.properties` file:
+  ```
+  sdk.dir=/Users/yourname/Library/Android/sdk
+  ```
+
+### "Permission denied: ./gradlew"
+```bash
+chmod +x gradlew
+```
+
+### Emulator won't start
+- Ensure hardware acceleration is enabled in BIOS
+- Try creating a new AVD with different API level
+- Check available disk space (emulator needs ~8GB)
+
+### App crashes immediately on emulator
+- **Most Common Cause**: Emulator API level is too low
+- **Solution**: This app requires **API 24+** (Android 7.0+)
+- Create a new emulator with API 24+ or use the existing one with higher API level
+- Check your AVD Manager and ensure the emulator is running API 24 or higher
+
+### Package Name Contains Java Keywords
+If you see errors like "Namespace 'com.example.final' is not a valid Java package name":
+- **Problem**: Project names with Java keywords (like `final`, `class`, `static`) cause package name conflicts
+- **Solution**: Use a different project name or specify a custom `--packageName` when generating
+- **Java Keywords to Avoid**: `abstract`, `boolean`, `break`, `case`, `catch`, `class`, `const`, `continue`, `default`, `do`, `else`, `enum`, `extends`, `final`, `finally`, `float`, `for`, `if`, `implements`, `import`, `int`, `interface`, `long`, `native`, `new`, `package`, `private`, `protected`, `public`, `return`, `short`, `static`, `super`, `switch`, `this`, `throw`, `throws`, `try`, `void`, `volatile`, `while`
+
+### Project Folder Opening
+⚠️ **Important**: Open the **entire generated app folder** in Android Studio, not a subfolder.
+- ✅ **Correct**: Open `apps/your-app-name/`
+- ❌ **Wrong**: Open `apps/your-app-name/app/`
+
+## 📚 Next Steps
+
+1. **Explore the Code**: Check out `MainActivity.kt` and `MainScreen.kt`
+2. **Read the Documentation**: See `DEVELOPMENT.md` for advanced topics
+3. **Add Features**: Start building your app functionality
+4. **Learn Jetpack Compose**: [Official Compose Tutorial](https://developer.android.com/jetpack/compose/tutorial)
+
+## 🤝 Support
+
+- **Android Studio Issues**: Check [Android Studio User Guide](https://developer.android.com/studio/intro)
+- **Jetpack Compose**: [Compose Documentation](https://developer.android.com/jetpack/compose)
+- **Kotlin**: [Kotlin Documentation](https://kotlinlang.org/docs/)
+- **Gradle**: [Gradle User Guide](https://docs.gradle.org/current/userguide/userguide.html)
+
+---
+
+**Happy Android Development!** 🚀📱

@@ -1,0 +1,18 @@
+# Alternative using Google Cloud Build's official Android image
+# These images are optimized for CI/CD and support multiple architectures
+FROM gcr.io/cloud-builders/android:latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Make gradlew executable
+RUN chmod +x ./gradlew
+
+# Download Gradle dependencies and verify setup
+RUN ./gradlew --version
+
+# Default command
+CMD ["./gradlew", "assembleDebug"]

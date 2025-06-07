@@ -1,0 +1,266 @@
+//
+//  <%= name %>Tests.swift
+//  <%= name %>Tests
+//
+//  Created by Terrible Lizard Generator
+//
+
+import XCTest
+@testable import <%= name %>
+
+final class <%= className %>Tests: XCTestCase {
+
+    // MARK: - Properties
+
+    var appState: AppState!
+
+    // MARK: - Setup & Teardown
+
+    override func setUpWithError() throws {
+        super.setUp()
+        appState = AppState()
+    }
+
+    override func tearDownWithError() throws {
+        appState = nil
+        super.tearDown()
+    }
+
+    // MARK: - App State Tests
+
+    func testAppStateInitialization() throws {
+        // Given
+        let appState = AppState()
+
+        // Then
+        XCTAssertFalse(appState.isLoading)
+        XCTAssertNil(appState.errorMessage)
+        XCTAssertTrue(appState.isOnline)
+    }
+
+    func testShowError() throws {
+        // Given
+        let errorMessage = "Test error message"
+
+        // When
+        appState.showError(errorMessage)
+
+        // Then
+        let expectation = XCTestExpectation(description: "Error message should be set")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertEqual(self.appState.errorMessage, errorMessage)
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 1.0)
+    }
+
+    func testClearErrorMessage() throws {
+        // Given
+        appState.showError("Test error")
+
+        // When
+        appState.clearErrorMessage()
+
+        // Then
+        let expectation = XCTestExpectation(description: "Error message should be cleared")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertNil(self.appState.errorMessage)
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 1.0)
+    }
+
+    func testAppLifecycleMethods() throws {
+        // Test app became active
+        appState.handleAppBecameActive()
+        XCTAssertNil(appState.errorMessage)
+
+        // Test app became inactive
+        appState.handleAppBecameInactive()
+        // No specific assertions for inactive state
+
+        // Test app entered background
+        appState.handleAppEnteredBackground()
+        // No specific assertions for background state
+    }
+
+    // MARK: - Data Model Tests
+
+    func testHomeItemCreation() throws {
+        // Given
+        let id = 1
+        let title = "Test Title"
+        let subtitle = "Test Subtitle"
+
+        // When
+        let homeItem = HomeItem(id: id, title: title, subtitle: subtitle)
+
+        // Then
+        XCTAssertEqual(homeItem.id, id)
+        XCTAssertEqual(homeItem.title, title)
+        XCTAssertEqual(homeItem.subtitle, subtitle)
+    }
+
+    func testCategoryCreation() throws {
+        // Given
+        let id = 1
+        let name = "Technology"
+        let icon = "laptopcomputer"
+
+        // When
+        let category = Category(id: id, name: name, icon: icon)
+
+        // Then
+        XCTAssertEqual(category.id, id)
+        XCTAssertEqual(category.name, name)
+        XCTAssertEqual(category.icon, icon)
+    }
+
+    func testUserSampleData() throws {
+        // Given
+        let user = User.sample
+
+        // Then
+        XCTAssertEqual(user.name, "John Doe")
+        XCTAssertEqual(user.email, "john.doe@example.com")
+        XCTAssertEqual(user.postsCount, 42)
+        XCTAssertEqual(user.followersCount, 1234)
+        XCTAssertEqual(user.followingCount, 567)
+        XCTAssertFalse(user.avatarURL.isEmpty)
+    }
+
+    // MARK: - Network Monitor Tests
+
+    func testNetworkMonitorInitialization() throws {
+        // Given
+        var isConnected: Bool?
+        let expectation = XCTestExpectation(description: "Network status should be updated")
+
+        // When
+        let monitor = NetworkMonitor { connected in
+            isConnected = connected
+            expectation.fulfill()
+        }
+
+        monitor.startMonitoring()
+
+        // Then
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertNotNil(isConnected)
+        XCTAssertTrue(isConnected!) // Default implementation assumes online
+
+        monitor.stopMonitoring()
+    }
+
+    // MARK: - Performance Tests
+
+    func testAppStatePerformance() throws {
+        measure {
+            let appState = AppState()
+            appState.handleAppBecameActive()
+            appState.showError("Test error")
+            appState.clearErrorMessage()
+            appState.handleAppEnteredBackground()
+        }
+    }
+
+    func testDataModelCreationPerformance() throws {
+        measure {
+            for i in 0..<1000 {
+                let homeItem = HomeItem(id: i, title: "Title \(i)", subtitle: "Subtitle \(i)")
+                let category = Category(id: i, name: "Category \(i)", icon: "icon\(i)")
+
+                // Use the objects to prevent optimization
+                _ = homeItem.title
+                _ = category.name
+            }
+        }
+    }
+
+    // MARK: - Async Tests
+
+    func testAsyncDataLoading() async throws {
+        // Given
+        let startTime = Date()
+
+        // When
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+
+        // Then
+        let endTime = Date()
+        let duration = endTime.timeIntervalSince(startTime)
+        XCTAssertGreaterThanOrEqual(duration, 0.1)
+        XCTAssertLessThan(duration, 0.2) // Should complete within reasonable time
+    }
+
+    @MainActor
+    func testMainActorOperations() async throws {
+        // Given
+        let appState = AppState()
+
+        // When
+        appState.showError("Test error")
+
+        // Then
+        // Wait a bit for the async operation to complete
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(appState.errorMessage, "Test error")
+
+        // When
+        appState.clearErrorMessage()
+
+        // Then
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertNil(appState.errorMessage)
+    }
+
+    // MARK: - Edge Cases
+
+    func testEmptyStringHandling() throws {
+        // Test with empty strings
+        let homeItem = HomeItem(id: 1, title: "", subtitle: "")
+        XCTAssertTrue(homeItem.title.isEmpty)
+        XCTAssertTrue(homeItem.subtitle.isEmpty)
+
+        let category = Category(id: 1, name: "", icon: "")
+        XCTAssertTrue(category.name.isEmpty)
+        XCTAssertTrue(category.icon.isEmpty)
+    }
+
+    func testLargeDataSets() throws {
+        // Test with large data sets
+        let largeId = Int.max
+        let longTitle = String(repeating: "A", count: 1000)
+
+        let homeItem = HomeItem(id: largeId, title: longTitle, subtitle: longTitle)
+        XCTAssertEqual(homeItem.id, largeId)
+        XCTAssertEqual(homeItem.title.count, 1000)
+        XCTAssertEqual(homeItem.subtitle.count, 1000)
+    }
+
+    // MARK: - Memory Tests
+
+    func testMemoryLeaks() throws {
+        weak var weakAppState: AppState?
+
+        autoreleasepool {
+            let appState = AppState()
+            weakAppState = appState
+
+            // Perform operations
+            appState.handleAppBecameActive()
+            appState.showError("Test")
+            appState.clearErrorMessage()
+            appState.handleAppEnteredBackground()
+        }
+
+        // Give some time for cleanup
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertNil(weakAppState, "AppState should be deallocated")
+        }
+    }
+}

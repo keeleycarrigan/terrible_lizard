@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  <%= name %>:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Development: mount source for live rebuilds
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    # Override for development - use dev server instead of nginx
+    command: sh -c "cd /app && npm run serve"
+    profiles:
+      - dev
+
+  <%= name %>-prod:
+    build: .
+    ports:
+      - "8080:80"
+    # Production: just serve static assets via nginx
+    profiles:
+      - prod

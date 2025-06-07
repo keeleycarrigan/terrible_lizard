@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name"><%= name %></string>
+    <string name="welcome_title">Welcome to <%= name %>!</string>
+    <string name="welcome_message">This is a modern Android application built with Kotlin and Jetpack Compose. Ready to start building amazing features!</string>
+    <string name="click_count">Button clicked %1$d times</string>
+    <string name="click_me">Click Me!</string>
+</resources>

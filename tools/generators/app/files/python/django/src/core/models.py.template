@@ -1,0 +1,30 @@
+"""Core application models."""
+
+from django.db import models
+from django.utils import timezone
+
+
+class TimeStampedModel(models.Model):
+    """Abstract base model with created and updated timestamps."""
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class ExampleModel(TimeStampedModel):
+    """Example model to demonstrate Django ORM usage."""
+
+    name = models.CharField(max_length=100, help_text="Name of the example item")
+    description = models.TextField(blank=True, help_text="Optional description")
+    is_active = models.BooleanField(default=True, help_text="Whether this item is active")
+
+    class Meta:
+        verbose_name = "Example Item"
+        verbose_name_plural = "Example Items"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name

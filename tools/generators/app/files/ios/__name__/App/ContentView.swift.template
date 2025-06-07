@@ -1,0 +1,521 @@
+//
+//  ContentView.swift
+//  <%= name %>
+//
+//  Created by Terrible Lizard Generator
+//
+
+import SwiftUI
+
+struct ContentView: View {
+
+    // MARK: - Environment
+
+    @EnvironmentObject var appState: AppState
+
+    // MARK: - State
+
+    @State private var selectedTab = 0
+    @State private var showingSettings = false
+
+    // MARK: - Body
+
+    var body: some View {
+        NavigationView {
+            TabView(selection: $selectedTab) {
+                HomeView()
+                    .tabItem {
+                        Image(systemName: "house.fill")
+                        Text("Home")
+                    }
+                    .tag(0)
+
+                ExploreView()
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("Explore")
+                    }
+                    .tag(1)
+
+                ProfileView()
+                    .tabItem {
+                        Image(systemName: "person.fill")
+                        Text("Profile")
+                    }
+                    .tag(2)
+            }
+            .navigationTitle(navigationTitle)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+        .overlay {
+            if appState.isLoading {
+                LoadingView()
+            }
+        }
+        .alert("Error", isPresented: .constant(appState.errorMessage != nil)) {
+            Button("OK") {
+                appState.clearErrorMessage()
+            }
+        } message: {
+            if let errorMessage = appState.errorMessage {
+                Text(errorMessage)
+            }
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var navigationTitle: String {
+        switch selectedTab {
+        case 0:
+            return "Home"
+        case 1:
+            return "Explore"
+        case 2:
+            return "Profile"
+        default:
+            return "<%= name %>"
+        }
+    }
+}
+
+// MARK: - Home View
+
+struct HomeView: View {
+
+    @EnvironmentObject var appState: AppState
+    @State private var items: [HomeItem] = []
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                WelcomeCard()
+
+                if items.isEmpty {
+                    EmptyStateView(
+                        title: "Welcome to <%= name %>",
+                        subtitle: "Get started by exploring the app",
+                        systemImage: "star.fill"
+                    )
+                } else {
+                    ForEach(items) { item in
+                        HomeItemCard(item: item)
+                    }
+                }
+            }
+            .padding()
+        }
+        .refreshable {
+            await loadItems()
+        }
+        .task {
+            await loadItems()
+        }
+    }
+
+    private func loadItems() async {
+        // Simulate loading data
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+
+        items = [
+            HomeItem(id: 1, title: "Welcome", subtitle: "Getting started with <%= name %>"),
+            HomeItem(id: 2, title: "Features", subtitle: "Explore what you can do"),
+            HomeItem(id: 3, title: "Settings", subtitle: "Customize your experience")
+        ]
+    }
+}
+
+// MARK: - Explore View
+
+struct ExploreView: View {
+
+    @State private var searchText = ""
+    @State private var categories: [Category] = []
+
+    var body: some View {
+        VStack {
+            SearchBar(text: $searchText)
+
+            ScrollView {
+                LazyVGrid(columns: gridColumns, spacing: 16) {
+                    ForEach(filteredCategories) { category in
+                        CategoryCard(category: category)
+                    }
+                }
+                .padding()
+            }
+        }
+        .onAppear {
+            loadCategories()
+        }
+    }
+
+    private var gridColumns: [GridItem] {
+        [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ]
+    }
+
+    private var filteredCategories: [Category] {
+        if searchText.isEmpty {
+            return categories
+        } else {
+            return categories.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+
+    private func loadCategories() {
+        categories = [
+            Category(id: 1, name: "Technology", icon: "laptopcomputer"),
+            Category(id: 2, name: "Design", icon: "paintbrush.fill"),
+            Category(id: 3, name: "Business", icon: "briefcase.fill"),
+            Category(id: 4, name: "Health", icon: "heart.fill")
+        ]
+    }
+}
+
+// MARK: - Profile View
+
+struct ProfileView: View {
+
+    @State private var user = User.sample
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                ProfileHeader(user: user)
+
+                ProfileStats(user: user)
+
+                ProfileActions()
+
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - Supporting Views
+
+struct WelcomeCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.blue)
+                Text("Welcome!")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+
+            Text("Thanks for using <%= name %>. We're excited to have you here!")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct HomeItemCard: View {
+    let item: HomeItem
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.title)
+                    .font(.headline)
+                Text(item.subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+    }
+}
+
+struct EmptyStateView: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: systemImage)
+                .font(.system(size: 48))
+                .foregroundColor(.blue)
+
+            VStack(spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding()
+    }
+}
+
+struct SearchBar: View {
+    @Binding var text: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+
+            TextField("Search...", text: $text)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+        }
+        .padding(.horizontal)
+    }
+}
+
+struct CategoryCard: View {
+    let category: Category
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: category.icon)
+                .font(.system(size: 32))
+                .foregroundColor(.blue)
+
+            Text(category.name)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+        }
+        .frame(height: 120)
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct ProfileHeader: View {
+    let user: User
+
+    var body: some View {
+        VStack(spacing: 16) {
+            AsyncImage(url: URL(string: user.avatarURL)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay {
+                        Image(systemName: "person.fill")
+                            .foregroundColor(.gray)
+                    }
+            }
+            .frame(width: 80, height: 80)
+            .clipShape(Circle())
+
+            VStack(spacing: 4) {
+                Text(user.name)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text(user.email)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct ProfileStats: View {
+    let user: User
+
+    var body: some View {
+        HStack(spacing: 32) {
+            StatItem(title: "Posts", value: "\(user.postsCount)")
+            StatItem(title: "Followers", value: "\(user.followersCount)")
+            StatItem(title: "Following", value: "\(user.followingCount)")
+        }
+    }
+}
+
+struct StatItem: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct ProfileActions: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Button("Edit Profile") {
+                // Handle edit profile
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button("Share Profile") {
+                // Handle share profile
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+}
+
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section("General") {
+                    SettingsRow(title: "Notifications", icon: "bell.fill")
+                    SettingsRow(title: "Privacy", icon: "lock.fill")
+                    SettingsRow(title: "Account", icon: "person.fill")
+                }
+
+                Section("Support") {
+                    SettingsRow(title: "Help Center", icon: "questionmark.circle.fill")
+                    SettingsRow(title: "Contact Us", icon: "envelope.fill")
+                }
+
+                Section("About") {
+                    SettingsRow(title: "Version", icon: "info.circle.fill", detail: "1.0.0")
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct SettingsRow: View {
+    let title: String
+    let icon: String
+    let detail: String?
+
+    init(title: String, icon: String, detail: String? = nil) {
+        self.title = title
+        self.icon = icon
+        self.detail = detail
+    }
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+
+            Text(title)
+
+            Spacer()
+
+            if let detail = detail {
+                Text(detail)
+                    .foregroundColor(.secondary)
+            } else {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            }
+        }
+    }
+}
+
+struct LoadingView: View {
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.2)
+
+                Text("Loading...")
+                    .font(.headline)
+            }
+            .padding(24)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+        }
+    }
+}
+
+// MARK: - Data Models
+
+struct HomeItem: Identifiable {
+    let id: Int
+    let title: String
+    let subtitle: String
+}
+
+struct Category: Identifiable {
+    let id: Int
+    let name: String
+    let icon: String
+}
+
+struct User {
+    let name: String
+    let email: String
+    let avatarURL: String
+    let postsCount: Int
+    let followersCount: Int
+    let followingCount: Int
+
+    static let sample = User(
+        name: "John Doe",
+        email: "john.doe@example.com",
+        avatarURL: "https://via.placeholder.com/80",
+        postsCount: 42,
+        followersCount: 1234,
+        followingCount: 567
+    )
+}
+
+// MARK: - Preview
+
+#Preview {
+    ContentView()
+        .environmentObject(AppState())
+}

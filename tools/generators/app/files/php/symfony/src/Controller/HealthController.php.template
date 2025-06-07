@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\EntityManagerInterface;
+
+class HealthController extends AbstractController
+{
+    public function __construct(
+        private EntityManagerInterface $entityManager
+    ) {}
+
+    #[Route('/health', name: 'api_health', methods: ['GET'])]
+    public function health(): JsonResponse
+    {
+        $checks = [
+            'status' => 'healthy',
+            'timestamp' => (new \DateTime())->format(\DateTime::ISO8601),
+            'app' => '<%= projectName %>',
+            'framework' => 'Symfony 7.0',
+            'environment' => $this->getParameter('kernel.environment'),
+            'checks' => []
+        ];
+
+        // Database health check
+        try {
+            $this->entityManager->getConnection()->connect();
+            $checks['checks']['database'] = [
+                'status' => 'healthy',
+                'connection' => 'ok'
+            ];
+        } catch (\Exception $e) {
+            $checks['status'] = 'unhealthy';
+            $checks['checks']['database'] = [
+                'status' => 'unhealthy',
+                'error' => $e->getMessage()
+            ];
+        }
+
+        // Memory check
+        $memoryUsage = memory_get_usage(true);
+        $memoryLimit = ini_get('memory_limit');
+        $checks['checks']['memory'] = [
+            'status' => 'healthy',
+            'usage' => $this->formatBytes($memoryUsage),
+            'limit' => $memoryLimit
+        ];
+
+        return $this->json($checks,
+            $checks['status'] === 'healthy' ? 200 : 503
+        );
+    }
+
+    private function formatBytes(int $bytes, int $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        for ($i = 0; $bytes > 1024; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, $precision) . ' ' . $units[$i];
+    }
+}

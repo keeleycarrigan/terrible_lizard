@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+use Throwable;
+
+class HealthController extends Controller
+{
+    /**
+     * Get application health status
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $checks = [
+            'database' => $this->checkDatabase(),
+            'redis' => $this->checkRedis(),
+            'memory' => $this->checkMemory(),
+        ];
+
+        $overallStatus = $this->determineOverallStatus($checks);
+
+        return response()->json([
+            'status' => $overallStatus,
+            'timestamp' => now()->toISOString(),
+            'app' => config('app.name'),
+            'framework' => 'Laravel ' . app()->version(),
+            'environment' => config('app.env'),
+            'checks' => $checks,
+        ]);
+    }
+
+    /**
+     * Check database connectivity
+     */
+    private function checkDatabase(): array
+    {
+        try {
+            DB::connection()->getPdo();
+            return [
+                'status' => 'healthy',
+                'connection' => 'ok',
+            ];
+        } catch (Throwable $e) {
+            return [
+                'status' => 'unhealthy',
+                'connection' => 'failed',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Check Redis connectivity
+     */
+    private function checkRedis(): array
+    {
+        try {
+            Redis::ping();
+            return [
+                'status' => 'healthy',
+                'connection' => 'ok',
+            ];
+        } catch (Throwable $e) {
+            return [
+                'status' => 'unhealthy',
+                'connection' => 'failed',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Check memory usage
+     */
+    private function checkMemory(): array
+    {
+        $memoryUsage = memory_get_usage(true);
+        $memoryLimit = $this->convertToBytes(ini_get('memory_limit'));
+
+        $usagePercentage = ($memoryUsage / $memoryLimit) * 100;
+        $status = $usagePercentage > 80 ? 'warning' : 'healthy';
+
+        return [
+            'status' => $status,
+            'usage' => $this->formatBytes($memoryUsage),
+            'limit' => ini_get('memory_limit'),
+            'percentage' => round($usagePercentage, 2),
+        ];
+    }
+
+    /**
+     * Determine overall status based on individual checks
+     */
+    private function determineOverallStatus(array $checks): string
+    {
+        foreach ($checks as $check) {
+            if ($check['status'] === 'unhealthy') {
+                return 'unhealthy';
+            }
+        }
+
+        foreach ($checks as $check) {
+            if ($check['status'] === 'warning') {
+                return 'warning';
+            }
+        }
+
+        return 'healthy';
+    }
+
+    /**
+     * Convert memory limit string to bytes
+     */
+    private function convertToBytes(string $value): int
+    {
+        $unit = strtolower($value[strlen($value) - 1]);
+        $number = (int) substr($value, 0, -1);
+
+        return match ($unit) {
+            'g' => $number * 1024 * 1024 * 1024,
+            'm' => $number * 1024 * 1024,
+            'k' => $number * 1024,
+            default => (int) $value,
+        };
+    }
+
+    /**
+     * Format bytes to human readable format
+     */
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $factor = floor(log($bytes, 1024));
+
+        return sprintf('%.2f %s', $bytes / (1024 ** $factor), $units[$factor]);
+    }
+}

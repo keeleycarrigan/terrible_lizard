@@ -1,0 +1,183 @@
+//
+//  <%= name %>App.swift
+//  <%= name %>
+//
+//  Created by Terrible Lizard Generator
+//
+
+import SwiftUI
+
+@main
+struct <%= className %>App: App {
+
+    // MARK: - Properties
+
+    /// App state manager for global application state
+    @StateObject private var appState = AppState()
+
+    /// Scene phase for handling app lifecycle events
+    @Environment(\.scenePhase) private var scenePhase
+
+    // MARK: - App Body
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(appState)
+                .onAppear {
+                    setupApp()
+                }
+        }
+        .onChange(of: scenePhase) { phase in
+            handleScenePhaseChange(phase)
+        }
+    }
+
+    // MARK: - Private Methods
+
+    /// Initial app setup
+    private func setupApp() {
+        configureAppearance()
+        setupLogging()
+
+        #if DEBUG
+        print("🦎 <%= name %> app launched in DEBUG mode")
+        #endif
+    }
+
+    /// Configure global app appearance
+    private func configureAppearance() {
+        // Configure navigation bar appearance
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+
+        // Configure tab bar appearance
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = UIColor.systemBackground
+
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+    }
+
+    /// Setup logging configuration
+    private func setupLogging() {
+        // Configure logging for different build configurations
+        #if DEBUG
+        // Enable verbose logging in debug builds
+        #else
+        // Production logging configuration
+        #endif
+    }
+
+    /// Handle scene phase changes (active, inactive, background)
+    private func handleScenePhaseChange(_ phase: ScenePhase) {
+        switch phase {
+        case .active:
+            appState.handleAppBecameActive()
+        case .inactive:
+            appState.handleAppBecameInactive()
+        case .background:
+            appState.handleAppEnteredBackground()
+        @unknown default:
+            break
+        }
+    }
+}
+
+// MARK: - App State
+
+/// Global application state manager
+class AppState: ObservableObject {
+
+    // MARK: - Published Properties
+
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var isOnline = true
+
+    // MARK: - Private Properties
+
+    private var networkMonitor: NetworkMonitor?
+
+    // MARK: - Initialization
+
+    init() {
+        setupNetworkMonitoring()
+    }
+
+    // MARK: - Public Methods
+
+    func handleAppBecameActive() {
+        // Handle app becoming active
+        clearErrorMessage()
+        startNetworkMonitoring()
+    }
+
+    func handleAppBecameInactive() {
+        // Handle app becoming inactive
+    }
+
+    func handleAppEnteredBackground() {
+        // Handle app entering background
+        stopNetworkMonitoring()
+    }
+
+    func showError(_ message: String) {
+        DispatchQueue.main.async {
+            self.errorMessage = message
+        }
+    }
+
+    func clearErrorMessage() {
+        DispatchQueue.main.async {
+            self.errorMessage = nil
+        }
+    }
+
+    // MARK: - Private Methods
+
+    private func setupNetworkMonitoring() {
+        networkMonitor = NetworkMonitor { [weak self] isConnected in
+            DispatchQueue.main.async {
+                self?.isOnline = isConnected
+            }
+        }
+    }
+
+    private func startNetworkMonitoring() {
+        networkMonitor?.startMonitoring()
+    }
+
+    private func stopNetworkMonitoring() {
+        networkMonitor?.stopMonitoring()
+    }
+}
+
+// MARK: - Network Monitor
+
+/// Simple network connectivity monitor
+class NetworkMonitor {
+
+    private let updateHandler: (Bool) -> Void
+
+    init(updateHandler: @escaping (Bool) -> Void) {
+        self.updateHandler = updateHandler
+    }
+
+    func startMonitoring() {
+        // Implement network monitoring logic
+        // For now, assume we're always online
+        updateHandler(true)
+    }
+
+    func stopMonitoring() {
+        // Stop network monitoring
+    }
+}

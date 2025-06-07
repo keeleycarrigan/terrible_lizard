@@ -1,0 +1,15 @@
+"""Core application URL configuration."""
+
+from django.urls import path
+from . import views
+
+app_name = 'core'
+
+urlpatterns = [
+    # API endpoints
+    path('status/', views.api_status, name='api_status'),
+    path('items/', views.example_items_api, name='example_items_api'),
+
+    # Web views
+    path('examples/', views.ExampleItemListView.as_view(), name='example_list'),
+]

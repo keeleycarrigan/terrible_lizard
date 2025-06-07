@@ -1,0 +1,48 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class HealthTest extends TestCase
+{
+    /**
+     * Test the health endpoint returns a successful response.
+     */
+    public function test_health_endpoint_returns_success(): void
+    {
+        $response = $this->get('/api/health');
+
+        $response->assertStatus(200)
+                 ->assertJsonStructure([
+                     'status',
+                     'timestamp',
+                     'app',
+                     'framework',
+                     'environment',
+                     'checks' => [
+                         'database' => ['status'],
+                         'redis' => ['status'],
+                         'memory' => ['status'],
+                     ],
+                 ]);
+    }
+
+    /**
+     * Test the health endpoint returns correct application information.
+     */
+    public function test_health_endpoint_returns_app_info(): void
+    {
+        $response = $this->get('/api/health');
+
+        $response->assertStatus(200)
+                 ->assertJson([
+                     'app' => config('app.name'),
+                     'environment' => config('app.env'),
+                 ])
+                 ->assertJsonFragment([
+                     'framework' => 'Laravel ' . app()->version(),
+                 ]);
+    }
+}

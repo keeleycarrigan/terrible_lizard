@@ -1,0 +1,281 @@
+/**
+ * <%= projectName %> - Main Application Entry Point
+ *
+ * A simple TypeScript application demonstrating:
+ * - Object-oriented design patterns
+ * - Event handling and DOM manipulation
+ * - Configuration management
+ * - Comprehensive error handling
+ * - Modern TypeScript features
+ */
+
+// Application Configuration
+interface AppConfig {
+  name: string;
+  version: string;
+  debug: boolean;
+  theme: 'light' | 'dark' | 'auto';
+}
+
+const DEFAULT_CONFIG: AppConfig = {
+  name: '<%= projectName %>',
+  version: '1.0.0',
+  debug: false,
+  theme: 'auto'
+};
+
+// Application State Interface
+interface AppState {
+  isInitialized: boolean;
+  clickCount: number;
+  currentTheme: 'light' | 'dark';
+  lastActivity: Date;
+}
+
+/**
+ * Main Application Class
+ * Manages application lifecycle, state, and user interactions
+ */
+class Application {
+  private config: AppConfig;
+  private state: AppState;
+  private elements: Map<string, HTMLElement>;
+
+  constructor(config: Partial<AppConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.state = {
+      isInitialized: false,
+      clickCount: 0,
+      currentTheme: this.detectTheme(),
+      lastActivity: new Date()
+    };
+    this.elements = new Map();
+
+    this.log('Application instance created');
+  }
+
+  /**
+   * Initialize the application
+   */
+  public async init(): Promise<void> {
+    try {
+      this.log('Initializing application...');
+
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        await new Promise(resolve => {
+          document.addEventListener('DOMContentLoaded', resolve);
+        });
+      }
+
+      // Setup DOM elements
+      this.setupElements();
+
+      // Setup event listeners
+      this.setupEventListeners();
+
+      // Apply initial theme
+      this.applyTheme(this.state.currentTheme);
+
+      // Update state
+      this.state.isInitialized = true;
+      this.updateDisplay();
+
+      this.log('Application initialized successfully');
+    } catch (error) {
+      this.logError('Failed to initialize application', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Setup DOM element references
+   */
+  private setupElements(): void {
+    const elementIds = ['app', 'counter', 'theme-toggle', 'reset-button'];
+
+    for (const id of elementIds) {
+      const element = document.getElementById(id);
+      if (element) {
+        this.elements.set(id, element);
+      } else {
+        this.logError(`Element with id '${id}' not found`);
+      }
+    }
+  }
+
+  /**
+   * Setup event listeners
+   */
+  private setupEventListeners(): void {
+    // Counter button click
+    const counter = this.elements.get('counter');
+    if (counter) {
+      counter.addEventListener('click', () => this.handleCounterClick());
+    }
+
+    // Theme toggle button
+    const themeToggle = this.elements.get('theme-toggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => this.toggleTheme());
+    }
+
+    // Reset button
+    const resetButton = this.elements.get('reset-button');
+    if (resetButton) {
+      resetButton.addEventListener('click', () => this.resetCounter());
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (event) => this.handleKeydown(event));
+
+    // Activity tracking
+    document.addEventListener('click', () => this.updateActivity());
+    document.addEventListener('keydown', () => this.updateActivity());
+  }
+
+  /**
+   * Handle counter button clicks
+   */
+  private handleCounterClick(): void {
+    this.state.clickCount++;
+    this.updateDisplay();
+    this.log(`Counter clicked. New count: ${this.state.clickCount}`);
+  }
+
+  /**
+   * Toggle between light and dark themes
+   */
+  private toggleTheme(): void {
+    this.state.currentTheme = this.state.currentTheme === 'light' ? 'dark' : 'light';
+    this.applyTheme(this.state.currentTheme);
+    this.log(`Theme switched to: ${this.state.currentTheme}`);
+  }
+
+  /**
+   * Reset the counter to zero
+   */
+  private resetCounter(): void {
+    this.state.clickCount = 0;
+    this.updateDisplay();
+    this.log('Counter reset');
+  }
+
+  /**
+   * Handle keyboard shortcuts
+   */
+  private handleKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case ' ':
+        if (event.target === document.body) {
+          event.preventDefault();
+          this.handleCounterClick();
+        }
+        break;
+      case 't':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.toggleTheme();
+        }
+        break;
+      case 'r':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.resetCounter();
+        }
+        break;
+    }
+  }
+
+  /**
+   * Update activity timestamp
+   */
+  private updateActivity(): void {
+    this.state.lastActivity = new Date();
+  }
+
+  /**
+   * Update the display with current state
+   */
+  private updateDisplay(): void {
+    const counter = this.elements.get('counter');
+    if (counter) {
+      counter.textContent = `Count: ${this.state.clickCount}`;
+    }
+
+    // Update document title
+    document.title = `${this.config.name} - Count: ${this.state.clickCount}`;
+  }
+
+  /**
+   * Detect system theme preference
+   */
+  private detectTheme(): 'light' | 'dark' {
+    if (this.config.theme !== 'auto') {
+      return this.config.theme as 'light' | 'dark';
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  /**
+   * Apply theme to document
+   */
+  private applyTheme(theme: 'light' | 'dark'): void {
+    document.documentElement.setAttribute('data-theme', theme);
+
+    const themeToggle = this.elements.get('theme-toggle');
+    if (themeToggle) {
+      themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+  }
+
+  /**
+   * Get application status
+   */
+  public getStatus(): { config: AppConfig; state: AppState; uptime: number } {
+    return {
+      config: this.config,
+      state: this.state,
+      uptime: Date.now() - this.state.lastActivity.getTime()
+    };
+  }
+
+  /**
+   * Cleanup resources
+   */
+  public destroy(): void {
+    // Remove event listeners if needed
+    this.elements.clear();
+    this.log('Application destroyed');
+  }
+
+  /**
+   * Log message if debug mode is enabled
+   */
+  private log(message: string): void {
+    if (this.config.debug) {
+      console.log(`[${this.config.name}] ${message}`);
+    }
+  }
+
+  /**
+   * Log error message
+   */
+  private logError(message: string, error?: any): void {
+    console.error(`[${this.config.name}] ${message}`, error);
+  }
+}
+
+// Initialize application when module loads
+const app = new Application({
+  debug: true // Enable debug mode for development
+});
+
+// Start the application
+app.init().catch(error => {
+  console.error('Failed to start application:', error);
+});
+
+// Export for testing and external access
+export { Application, type AppConfig, type AppState };

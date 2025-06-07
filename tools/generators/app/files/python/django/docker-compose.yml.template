@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8001:8000"  # Django development server
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=dev-secret-key-<%= projectName %>
+      - USE_DOCKER=true
+      - DB_NAME=<%= moduleName %>_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_LOG_LEVEL=DEBUG
+    command: >
+      sh -c "python src/manage.py migrate &&
+             python src/manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: <%= moduleName %>_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

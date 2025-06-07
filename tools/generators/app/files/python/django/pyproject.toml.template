@@ -1,0 +1,105 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "<%= projectName %>"
+version = "0.1.0"
+description = "Django application: <%= projectName %>"
+authors = ["Your Organization <dev@yourorg.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^<%= pythonVersion || '3.11' %>"
+django = "^5.0.0"
+django-cors-headers = "^4.3.0"
+python-dotenv = "^1.0.0"
+psycopg2-binary = "^2.9.0"
+gunicorn = "^21.2.0"
+whitenoise = "^6.6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+pytest-cov = "^4.0"
+pytest-django = "^4.7.0"
+ruff = "^0.1"
+mypy = "^1.0"
+black = "^23.0"
+django-extensions = "^3.2.0"
+factory-boy = "^3.3.0"
+
+[tool.ruff]
+extend = "../../../pyproject.toml"
+src = ["src"]
+
+[tool.ruff.lint]
+# Django-specific linting rules
+extend-ignore = [
+    "D100", "D104",  # Allow missing docstrings in some cases
+    "RUF012",        # Allow mutable class attributes for Django models
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=85",
+    "--reuse-db",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "models: Model tests",
+    "views: View tests",
+    "forms: Form tests",
+]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/env/*",
+    "*/settings/*",
+    "manage.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if settings.DEBUG",
+]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.development"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true

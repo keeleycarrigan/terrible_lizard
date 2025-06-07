@@ -1,0 +1,140 @@
+"""Tests for core application models."""
+
+import pytest
+from django.test import TestCase
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
+from core.models import ExampleModel, TimeStampedModel
+
+
+class TimeStampedModelTest(TestCase):
+    """Test cases for TimeStampedModel abstract base class."""
+
+    def test_timestamps_are_set_on_creation(self):
+        """Test that created_at and updated_at are set when model is created."""
+        # Create a concrete model instance for testing
+        item = ExampleModel.objects.create(name="Test Item")
+
+        self.assertIsNotNone(item.created_at)
+        self.assertIsNotNone(item.updated_at)
+        self.assertLessEqual(item.created_at, timezone.now())
+        self.assertLessEqual(item.updated_at, timezone.now())
+
+    def test_updated_at_changes_on_save(self):
+        """Test that updated_at changes when model is saved."""
+        item = ExampleModel.objects.create(name="Test Item")
+        original_updated_at = item.updated_at
+
+        # Wait a small amount and save again
+        item.name = "Updated Test Item"
+        item.save()
+
+        self.assertGreater(item.updated_at, original_updated_at)
+
+
+class ExampleModelTest(TestCase):
+    """Test cases for ExampleModel."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.valid_data = {
+            'name': 'Test Example',
+            'description': 'This is a test example',
+            'is_active': True
+        }
+
+    def test_create_example_model(self):
+        """Test creating an ExampleModel instance."""
+        item = ExampleModel.objects.create(**self.valid_data)
+
+        self.assertEqual(item.name, self.valid_data['name'])
+        self.assertEqual(item.description, self.valid_data['description'])
+        self.assertEqual(item.is_active, self.valid_data['is_active'])
+        self.assertIsNotNone(item.created_at)
+        self.assertIsNotNone(item.updated_at)
+
+    def test_string_representation(self):
+        """Test the string representation of ExampleModel."""
+        item = ExampleModel.objects.create(**self.valid_data)
+        self.assertEqual(str(item), self.valid_data['name'])
+
+    def test_default_values(self):
+        """Test default values for ExampleModel fields."""
+        item = ExampleModel.objects.create(name="Minimal Item")
+
+        self.assertEqual(item.name, "Minimal Item")
+        self.assertEqual(item.description, "")
+        self.assertTrue(item.is_active)
+
+    def test_ordering(self):
+        """Test that ExampleModel instances are ordered by created_at descending."""
+        # Create multiple items
+        item1 = ExampleModel.objects.create(name="First Item")
+        item2 = ExampleModel.objects.create(name="Second Item")
+        item3 = ExampleModel.objects.create(name="Third Item")
+
+        # Get all items (should be ordered by created_at desc)
+        items = list(ExampleModel.objects.all())
+
+        # Most recent should be first
+        self.assertEqual(items[0], item3)
+        self.assertEqual(items[1], item2)
+        self.assertEqual(items[2], item1)
+
+    def test_verbose_names(self):
+        """Test verbose names for ExampleModel."""
+        meta = ExampleModel._meta
+        self.assertEqual(meta.verbose_name, "Example Item")
+        self.assertEqual(meta.verbose_name_plural, "Example Items")
+
+    def test_name_max_length(self):
+        """Test that name field respects max_length constraint."""
+        long_name = "x" * 101  # Exceeds max_length of 100
+
+        with self.assertRaises(ValidationError):
+            item = ExampleModel(name=long_name)
+            item.full_clean()  # This triggers validation
+
+    def test_description_can_be_blank(self):
+        """Test that description field can be blank."""
+        item = ExampleModel.objects.create(name="Test Item", description="")
+        self.assertEqual(item.description, "")
+
+    def test_is_active_default(self):
+        """Test that is_active defaults to True."""
+        item = ExampleModel.objects.create(name="Test Item")
+        self.assertTrue(item.is_active)
+
+
+@pytest.mark.django_db
+class ExampleModelPytestTest:
+    """Pytest-style tests for ExampleModel."""
+
+    def test_create_with_pytest(self):
+        """Test creating ExampleModel with pytest."""
+        item = ExampleModel.objects.create(
+            name="Pytest Item",
+            description="Created with pytest",
+            is_active=True
+        )
+
+        assert item.name == "Pytest Item"
+        assert item.description == "Created with pytest"
+        assert item.is_active is True
+        assert item.created_at is not None
+        assert item.updated_at is not None
+
+    def test_filter_active_items(self):
+        """Test filtering active items."""
+        # Create active and inactive items
+        ExampleModel.objects.create(name="Active Item", is_active=True)
+        ExampleModel.objects.create(name="Inactive Item", is_active=False)
+
+        active_items = ExampleModel.objects.filter(is_active=True)
+        inactive_items = ExampleModel.objects.filter(is_active=False)
+
+        assert active_items.count() == 1
+        assert inactive_items.count() == 1
+        assert active_items.first().name == "Active Item"
+        assert inactive_items.first().name == "Inactive Item"

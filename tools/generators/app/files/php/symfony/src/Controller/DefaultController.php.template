@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+
+class DefaultController extends AbstractController
+{
+    #[Route('/', name: 'app_index', methods: ['GET'])]
+    public function index(): JsonResponse
+    {
+        return $this->json([
+            'message' => 'Welcome to <%= projectName %>',
+            'framework' => 'Symfony',
+            'version' => '7.0',
+            'app' => '<%= projectName %>',
+            'environment' => $this->getParameter('kernel.environment'),
+            'documentation' => [
+                'health' => '/api/health',
+                'items' => '/api/items',
+            ],
+        ]);
+    }
+}

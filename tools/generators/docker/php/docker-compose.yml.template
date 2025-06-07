@@ -1,0 +1,87 @@
+services:
+    # PHP Application with Nginx
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: development
+        ports:
+            - '8003:80' # PHP port mapping to avoid conflicts
+        volumes:
+            - ./docker/php.ini:/usr/local/etc/php/php.ini
+        environment:
+            APP_ENV: dev
+            APP_DEBUG: 'true'
+            DATABASE_URL: postgresql://postgres:password@db:5432/<%= projectName %>_db
+            REDIS_URL: redis://redis:6379
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        restart: unless-stopped
+        networks:
+            - app-network
+
+    # PostgreSQL Database
+    db:
+        image: postgres:15-alpine
+        environment:
+            POSTGRES_DB: <%= projectName %>_db
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+        ports:
+            - '5435:5432' # Map to different port to avoid conflicts
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U postgres']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        restart: unless-stopped
+        networks:
+            - app-network
+
+    # Redis (for caching/sessions)
+    redis:
+        image: redis:7-alpine
+        ports:
+            - '6382:6379' # Map to different port to avoid conflicts
+        volumes:
+            - redis_data:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        restart: unless-stopped
+        networks:
+            - app-network
+
+    # PhpMyAdmin (optional - for database management)
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        environment:
+            PMA_HOST: db
+            PMA_USER: postgres
+            PMA_PASSWORD: password
+        ports:
+            - '8081:80'
+        depends_on:
+            - db
+        restart: unless-stopped
+        networks:
+            - app-network
+        profiles:
+            - admin
+
+volumes:
+    postgres_data:
+        driver: local
+    redis_data:
+        driver: local
+
+networks:
+    app-network:
+        driver: bridge

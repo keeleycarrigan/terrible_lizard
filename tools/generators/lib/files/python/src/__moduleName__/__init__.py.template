@@ -1,0 +1,14 @@
+"""
+<%= name %> - Python library for Terrible Lizard monorepo
+
+<% if (description) { %><%= description %><% } else { %>A Python library providing reusable functionality.<% } %>
+"""
+
+from .<%= fileName %> import <%= className %>
+
+__version__ = "0.1.0"
+__author__ = "Terrible Lizard Team"
+__email__ = "dev@terrible-lizard.com"
+
+# Public API
+__all__ = ["<%= className %>"]
