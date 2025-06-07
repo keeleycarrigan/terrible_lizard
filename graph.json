@@ -1,0 +1,115 @@
+{
+  "graph": {
+    "nodes": {
+      "test-python-lib": {
+        "name": "test-python-lib",
+        "type": "lib",
+        "data": {
+          "root": "libs/test-python-lib",
+          "name": "test-python-lib",
+          "projectType": "library",
+          "sourceRoot": "libs/test-python-lib/src",
+          "tags": [
+            "scope:shared",
+            "type:python"
+          ],
+          "targets": {
+            "build": {
+              "executor": "@nxlv/python:build",
+              "outputs": [
+                "{projectRoot}/dist"
+              ],
+              "options": {
+                "outputPath": "dist/libs/test-python-lib",
+                "publish": false
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default"
+              ]
+            },
+            "test": {
+              "executor": "@nxlv/python:pytest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "testPath": "libs/test-python-lib/tests"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.js"
+              ]
+            },
+            "lint": {
+              "executor": "@nxlv/python:ruff",
+              "options": {
+                "lintPath": "libs/test-python-lib/src"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/.eslintignore"
+              ]
+            },
+            "install": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "poetry install",
+                "cwd": "libs/test-python-lib"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      },
+      "terrible-lizard-generators": {
+        "name": "terrible-lizard-generators",
+        "type": "lib",
+        "data": {
+          "root": "tools/generators",
+          "name": "terrible-lizard-generators",
+          "tags": [
+            "npm:public"
+          ],
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "terrible-lizard-generators",
+              "packageMain": "index.js",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "targets": {
+            "nx-release-publish": {
+              "executor": "@nx/js:release-publish",
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "options": {},
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      }
+    },
+    "dependencies": {
+      "test-python-lib": [],
+      "terrible-lizard-generators": []
+    }
+  }
+}

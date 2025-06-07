@@ -1,0 +1,9 @@
+{
+    "generators": {
+        "create-lib": {
+            "factory": "./create-lib",
+            "schema": "./schema.json",
+            "description": "Create a new library in the polyglot monorepo"
+        }
+    }
+}

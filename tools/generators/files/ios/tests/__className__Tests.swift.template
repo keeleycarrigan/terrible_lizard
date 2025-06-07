@@ -1,0 +1,63 @@
+//
+//  <%= className %>Tests.swift
+//  <%= name %>Tests
+//
+//  Created by Terrible Lizard Generator
+//
+
+import XCTest
+@testable import <%= name %>
+
+final class <%= className %>Tests: XCTestCase {
+
+    var library: <%= className %>!
+
+    override func setUpWithError() throws {
+        library = <%= className %>.shared
+    }
+
+    override func tearDownWithError() throws {
+        library = nil
+    }
+
+    func testLibraryInitialization() throws {
+        XCTAssertNotNil(library)
+        XCTAssertEqual(<%= className %>.version, "0.1.0")
+    }
+
+    func testProcess() throws {
+        let input = "test input"
+        let result = library.process(input: input)
+        XCTAssertEqual(result, "Processed: test input")
+    }
+
+    func testProcessArray() throws {
+        let inputs = ["test1", "test2", "test3"]
+        let results = library.processArray(inputs)
+
+        XCTAssertEqual(results.count, 3)
+        XCTAssertEqual(results[0], "Processed: test1")
+        XCTAssertEqual(results[1], "Processed: test2")
+        XCTAssertEqual(results[2], "Processed: test3")
+    }
+
+    @available(iOS 13.0, *)
+    func testProcessAsync() async throws {
+        let input = "async test"
+        let result = await library.processAsync(input: input)
+        XCTAssertEqual(result, "Async processed: async test")
+    }
+
+    func testPerformanceExample() throws {
+        // This is an example of a performance test case.
+        measure {
+            _ = library.process(input: "performance test")
+        }
+    }
+
+    func testSingletonPattern() throws {
+        let instance1 = <%= className %>.shared
+        let instance2 = <%= className %>.shared
+        XCTAssertIdentical(instance1, instance2)
+    }
+}

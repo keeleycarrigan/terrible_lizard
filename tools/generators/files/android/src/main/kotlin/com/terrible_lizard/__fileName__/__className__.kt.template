@@ -1,0 +1,144 @@
+package <%= packageName %>
+
+import kotlinx.coroutines.delay
+
+/**
+ * <%= description %>
+ *
+ * Main class for <%= name %> Android library.
+ */
+class <%= className %> private constructor() {
+
+    companion object {
+        /**
+         * Library version
+         */
+        const val VERSION = "0.1.0"
+
+        /**
+         * Singleton instance
+         */
+        @JvmStatic
+        val shared: <%= className %> by lazy { <%= className %>() }
+
+        /**
+         * Java-friendly singleton access
+         */
+        @JvmStatic
+        fun getInstance(): <%= className %> = shared
+    }
+
+    private var isInitialized = false
+
+    /**
+     * Initialize the library
+     */
+    fun initialize() {
+        if (!isInitialized) {
+            // Library initialization code here
+            isInitialized = true
+            println("<%= className %> library initialized")
+        }
+    }
+
+    /**
+     * Check if library is initialized
+     */
+    fun isInitialized(): Boolean = isInitialized
+
+    /**
+     * Process input string
+     *
+     * @param input The input string to process
+     * @return Processed output string
+     */
+    fun process(input: String): String {
+        require(isInitialized) { "Library must be initialized before use" }
+        return "Processed: $input"
+    }
+
+    /**
+     * Process list of strings
+     *
+     * @param inputs List of input strings
+     * @return List of processed strings
+     */
+    fun processArray(inputs: List<String>): List<String> {
+        require(isInitialized) { "Library must be initialized before use" }
+        return inputs.map { process(it) }
+    }
+
+    /**
+     * Async processing with coroutines
+     *
+     * @param input The input string to process
+     * @return Processed output string
+     */
+    suspend fun processAsync(input: String): String {
+        require(isInitialized) { "Library must be initialized before use" }
+
+        // Simulate async work
+        delay(100) // 100ms delay
+        return "Async processed: $input"
+    }
+
+    /**
+     * Java-friendly async method with callback
+     *
+     * @param input The input string to process
+     * @param callback Callback to receive the result
+     */
+    fun processAsyncJava(input: String, callback: (String) -> Unit) {
+        require(isInitialized) { "Library must be initialized before use" }
+
+        // In a real implementation, you'd use proper threading
+        Thread {
+            Thread.sleep(100)
+            callback("Async processed: $input")
+        }.start()
+    }
+}
+
+/**
+ * Interface defining the public API
+ */
+interface <%= className %>Interface {
+    fun initialize()
+    fun isInitialized(): Boolean
+    fun process(input: String): String
+    fun processArray(inputs: List<String>): List<String>
+    suspend fun processAsync(input: String): String
+}
+
+/**
+ * Extension functions for convenience
+ */
+fun <%= className %>.processNullable(input: String?): String? {
+    return input?.let { process(it) }
+}
+
+/**
+ * Kotlin DSL builder pattern example
+ */
+class <%= className %>Builder {
+    private var autoInitialize = true
+
+    fun autoInitialize(enable: Boolean) = apply {
+        this.autoInitialize = enable
+    }
+
+    fun build(): <%= className %> {
+        val instance = <%= className %>.shared
+        if (autoInitialize) {
+            instance.initialize()
+        }
+        return instance
+    }
+}
+
+/**
+ * DSL function for building library instance
+ */
+fun <%= fileName %>(block: <%= className %>Builder.() -> Unit = {}): <%= className %> {
+    return <%= className %>Builder().apply(block).build()
+}

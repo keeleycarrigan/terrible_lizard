@@ -1,0 +1,14 @@
+{
+    "name": "@terrible-lizard/generators",
+    "version": "0.0.1",
+    "private": true,
+    "type": "commonjs",
+    "main": "./src/index.js",
+    "types": "./src/index.d.ts",
+    "generators": "./generators.json",
+    "nx-migrations": "./migrations.json",
+    "dependencies": {
+        "@nx/devkit": "21.1.2",
+        "tslib": "^2.3.0"
+    }
+}

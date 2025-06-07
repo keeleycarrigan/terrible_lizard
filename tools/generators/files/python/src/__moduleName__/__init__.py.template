@@ -1,0 +1,13 @@
+"""
+<%= className %> - <%= name %> library
+
+This module provides <%= type %> functionality for the Terrible Lizard monorepo.
+"""
+
+from .<%= fileName.replace(/-/g, '_') %> import <%= className %>
+
+__version__ = "0.1.0"
+__author__ = "Terrible Lizard Team"
+__email__ = "dev@terrible-lizard.com"
+
+__all__ = ["<%= className %>"]

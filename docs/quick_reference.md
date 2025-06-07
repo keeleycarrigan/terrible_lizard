@@ -136,10 +136,152 @@ phpunit
 - Trailing commas (ES5 style)
 - Arrow parentheses always included
 
+## Generator Development Patterns
+
+### Custom Nx Generator Structure
+```
+tools/generators/
+├── generators.json          # Generator registry
+├── create-lib.ts           # Main generator logic
+├── schema.json             # Parameter definitions
+├── schema.d.ts             # TypeScript interfaces
+└── files/                  # Template directories
+    ├── common/             # Shared templates (README)
+    ├── typescript/         # JS/TS templates
+    ├── python/             # Python templates  
+    ├── php/                # PHP templates
+    ├── ios/                # iOS templates
+    └── android/            # Android templates
+```
+
+### Template File Conventions
+- **Extension**: Use `.template` (not `.ejs`) for template files
+- **Variables**: Use EJS syntax `<%= variableName %>` (not `__variableName__`)
+- **File Naming**: Use `__variableName__` in template file paths for dynamic naming
+- **Directory Structure**: For mobile, create proper package paths (`com/terrible_lizard/__fileName__/`)
+
+### Generator Implementation Patterns
+```typescript
+// Standard generator function structure
+export async function myGenerator(tree: Tree, options: Schema) {
+    const normalizedOptions = normalizeOptions(tree, options);
+    
+    // 1. Add Nx project configuration
+    addProjectConfiguration(tree, normalizedOptions.projectName, {
+        root: normalizedOptions.projectRoot,
+        projectType: 'library',
+        sourceRoot: `${normalizedOptions.projectRoot}/src`,
+        tags: normalizedOptions.tags,
+        targets: getTargetsForType(normalizedOptions.type),
+    });
+    
+    // 2. Generate files from templates
+    generateFiles(
+        tree,
+        path.join(__dirname, 'files', normalizedOptions.type),
+        normalizedOptions.projectRoot,
+        {
+            ...normalizedOptions,
+            // Add computed variables
+            description: `${options.name} - Description`,
+            packageName: computePackageName(options.name),
+        }
+    );
+    
+    // 3. Format and return
+    await formatFiles(tree);
+}
+```
+
+### Essential Variables for Templates
+- **All Types**: `name`, `className`, `fileName`, `description`
+- **Python**: `moduleName` (snake_case conversion)
+- **PHP**: `namespace` (PascalCase conversion)
+- **Android**: `packageName` (com.company.module_name)
+- **iOS**: `bundleIdentifier` (com.company.module-name)
+
+### Target Configuration by Language
+```typescript
+// TypeScript libraries
+{
+    build: { executor: '@nx/js:tsc' },
+    test: { executor: '@nx/jest:jest' },
+    lint: { executor: '@nx/eslint:lint' }
+}
+
+// Python libraries  
+{
+    build: { executor: 'nx:run-commands', command: 'poetry build' },
+    test: { executor: 'nx:run-commands', command: 'poetry run pytest' },
+    lint: { executor: 'nx:run-commands', command: 'poetry run ruff check' }
+}
+
+// PHP libraries
+{
+    test: { executor: 'nx:run-commands', command: 'composer exec phpunit' },
+    lint: { executor: 'nx:run-commands', command: 'composer exec php-cs-fixer fix --dry-run' }
+}
+
+// iOS libraries (requires Xcode)
+{
+    build: { executor: 'nx:run-commands', command: 'xcodebuild build ...' },
+    test: { executor: 'nx:run-commands', command: 'xcodebuild test ...' }
+}
+
+// Android libraries
+{
+    build: { executor: '@nx/gradle:gradle', options: { task: 'assembleDebug' } },
+    test: { executor: '@nx/gradle:gradle', options: { task: 'testDebugUnitTest' } }
+}
+```
+
+### Testing Generators (Without Native Toolchains)
+```bash
+# Test generator creation
+pnpm nx g @terrible-lizard/generators:create-lib test-lib --type=python
+
+# Validate generated structure
+ls -la libs/test-lib/
+
+# Check template substitution
+cat libs/test-lib/src/test_lib/test_lib.py
+
+# Test TypeScript integration
+pnpm nx test test-lib  # (for TS libraries)
+
+# Clean up test
+rm -rf libs/test-lib
+```
+
+### Common Gotchas
+1. **Template Variables**: Must pass all referenced variables in `generateFiles` options
+2. **File Paths**: Android/mobile templates need proper directory structure in `files/`
+3. **Package Names**: Convert hyphens to underscores for Python/Android, maintain for others
+4. **Native Toolchains**: iOS requires Xcode, Android requires SDK for actual building
+5. **EJS Syntax**: Template files must use `<%= var %>` not `__var__` for substitution
+
+### Generator Commands
+```bash
+# Generate library (all types supported)
+nx g @terrible-lizard/generators:create-lib my-lib --type=python
+nx g @terrible-lizard/generators:create-lib ui-components --type=ui  
+nx g @terrible-lizard/generators:create-lib api-client --type=php
+nx g @terrible-lizard/generators:create-lib ios-utils --type=ios-native
+nx g @terrible-lizard/generators:create-lib android-utils --type=android-native
+
+# Optional parameters
+--tags=scope:shared,type:utility
+--directory=mobile/ios
+--importPath=@my-org/my-lib
+```
+
 ## Next Phase Preparation
 
-Ready for Phase 3 tasks:
-- [ ] Create custom `create-lib` generator in `tools/generators/`
-- [ ] Support library types: `ui`, `networking`, `utility`, `python`, `php`, `ios-native`, `android-native`
-- [ ] Set up EJS templates for each library type
-- [ ] Implement shell command integration for package managers 
+✅ **Phase 3 Complete**: Library scaffolding fully implemented
+
+Ready for Phase 4 tasks:
+- [ ] Create custom `create-app` generator for applications
+- [ ] Support app types: `web`, `python`, `php`, `ios-native`, `android-native`  
+- [ ] Implement framework selection (React, Angular, Flask, Django, etc.)
+- [ ] Add Docker integration for web/backend applications
+- [ ] Set up application templates with proper configurations

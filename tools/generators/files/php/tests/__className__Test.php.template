@@ -1,0 +1,117 @@
+<?php
+
+declare(strict_types=1);
+
+namespace <%= namespace %>\Tests;
+
+use PHPUnit\Framework\TestCase;
+use <%= namespace %>\<%= className %>;
+
+/**
+ * Tests for <%= className %>
+ *
+ * This class contains unit tests for the <%= name %> library.
+ */
+class <%= className %>Test extends TestCase
+{
+    private <%= className %> $instance;
+
+    protected function setUp(): void
+    {
+        $this->instance = new <%= className %>();
+    }
+
+    public function testInstantiation(): void
+    {
+        $this->assertInstanceOf(<%= className %>::class, $this->instance);
+    }
+
+    public function testInstantiationWithConfig(): void
+    {
+        $config = ['test' => 'value'];
+        $instance = new <%= className %>($config);
+        $this->assertSame($config, $instance->getConfig());
+    }
+
+    public function testHello(): void
+    {
+        $result = $this->instance->hello();
+        $this->assertIsString($result);
+        $this->assertStringContainsString('<%= className %>', $result);
+        $this->assertSame('Hello from <%= className %>!', $result);
+    }
+
+    public function testGetInfo(): void
+    {
+        $info = $this->instance->getInfo();
+        $this->assertIsArray($info);
+        $this->assertSame('<%= name %>', $info['name']);
+        $this->assertSame('<%= type %>', $info['type']);
+        $this->assertSame('<%= className %>', $info['class']);
+        $this->assertSame('0.1.0', $info['version']);
+        $this->assertTrue($info['initialized']);
+    }
+
+    public function testProcessEmptyArray(): void
+    {
+        $result = $this->instance->process([]);
+        $this->assertSame([], $result);
+    }
+
+    public function testProcessWithData(): void
+    {
+        $inputData = [1, 2, 3, 'test'];
+        $result = $this->instance->process($inputData);
+        $this->assertSame($inputData, $result);
+    }
+
+    public function testGetConfig(): void
+    {
+        $config = $this->instance->getConfig();
+        $this->assertIsArray($config);
+        $this->assertEmpty($config);
+    }
+
+    public function testUpdateConfig(): void
+    {
+        $newConfig = ['key' => 'value', 'number' => 42];
+        $this->instance->updateConfig($newConfig);
+        $this->assertSame($newConfig, $this->instance->getConfig());
+    }
+
+    public function testUpdateConfigMerges(): void
+    {
+        $initialConfig = ['initial' => 'value'];
+        $instance = new <%= className %>($initialConfig);
+
+        $additionalConfig = ['additional' => 'value'];
+        $instance->updateConfig($additionalConfig);
+
+        $expected = array_merge($initialConfig, $additionalConfig);
+        $this->assertSame($expected, $instance->getConfig());
+    }
+
+    /**
+     * @dataProvider configProvider
+     */
+    public function testConfigHandling(array $config, array $expected): void
+    {
+        $instance = new <%= className %>($config);
+        $this->assertSame($expected, $instance->getConfig());
+    }
+
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public static function configProvider(): array
+    {
+        return [
+            'empty config' => [[], []],
+            'simple config' => [['key' => 'value'], ['key' => 'value']],
+            'complex config' => [
+                ['num' => 42, 'bool' => true, 'array' => [1, 2, 3]],
+                ['num' => 42, 'bool' => true, 'array' => [1, 2, 3]],
+            ],
+        ];
+    }
+}

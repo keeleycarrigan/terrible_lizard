@@ -1,0 +1,44 @@
+{
+    "name": "<% if (importPath) { %><%= importPath %><% } else { %>terrible-lizard/<%= name %><% } %>",
+    "description": "<%= name %> - PHP library for Terrible Lizard monorepo",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Terrible Lizard Team",
+            "email": "dev@terrible-lizard.com"
+        }
+    ],
+    "require": {
+        "php": "^<%= phpVersion %>"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "psalm/plugin-phpunit": "^0.18",
+        "vimeo/psalm": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "<%= namespace %>\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "<%= namespace %>\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-html coverage",
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "lint:fix": "php-cs-fixer fix",
+        "psalm": "psalm"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpunit/phpunit": true
+        }
+    }
+}

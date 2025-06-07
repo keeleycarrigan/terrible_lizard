@@ -1,0 +1,66 @@
+"""
+<%= className %> main module
+
+This module implements the core functionality for the <%= name %> library.
+"""
+
+from typing import Any, Dict, List, Optional
+
+
+class <%= className %>:
+    """
+    <%= className %> provides <%= type %> functionality.
+
+    This is the main class for the <%= name %> library, providing
+    a starting point for implementing <%= type %>-specific features.
+    """
+
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Initialize <%= className %>.
+
+        Args:
+            config: Optional configuration dictionary
+        """
+        self.config = config or {}
+        self._initialized = True
+
+    def hello(self) -> str:
+        """
+        Return a greeting message.
+
+        Returns:
+            A greeting string from this library
+        """
+        return f"Hello from <%= className %>!"
+
+    def get_info(self) -> Dict[str, Any]:
+        """
+        Get information about this library.
+
+        Returns:
+            Dictionary containing library metadata
+        """
+        return {
+            "name": "<%= name %>",
+            "type": "<%= type %>",
+            "class": "<%= className %>",
+            "version": "0.1.0",
+            "initialized": self._initialized,
+        }
+
+    def process(self, data: List[Any]) -> List[Any]:
+        """
+        Process input data.
+
+        This is a placeholder method that should be implemented
+        according to the specific needs of your <%= type %> library.
+
+        Args:
+            data: Input data to process
+
+        Returns:
+            Processed data
+        """
+        # Placeholder implementation
+        return data.copy() if data else []

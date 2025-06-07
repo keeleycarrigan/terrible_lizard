@@ -1,0 +1,71 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "<% if (importPath) { %><%= importPath %><% } else { %>terrible-lizard-<%= moduleName %><% } %>"
+version = "0.1.0"
+description = "<%= name %> - Python library for Terrible Lizard monorepo"
+authors = ["Terrible Lizard Team <dev@terrible-lizard.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "<%= moduleName %>", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+pytest-cov = "^4.0"
+ruff = "^0.1"
+mypy = "^1.0"
+
+[tool.ruff]
+extend = "../../../pyproject.toml"
+src = ["src"]
+
+[tool.ruff.lint]
+# Library-specific linting rules
+extend-ignore = ["D100", "D104"]  # Allow missing docstrings in some cases
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=html:htmlcov",
+    "--cov=<%= moduleName %>",
+    "--cov-fail-under=90"
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

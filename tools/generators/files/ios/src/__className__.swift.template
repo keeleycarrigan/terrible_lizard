@@ -1,0 +1,75 @@
+//
+//  <%= className %>.swift
+//  <%= name %>
+//
+//  Created by Terrible Lizard Generator
+//
+
+import Foundation
+
+/// <%= description %>
+@objc public class <%= className %>: NSObject {
+
+    /// Shared instance for singleton pattern
+    @objc public static let shared = <%= className %>()
+
+    /// Library version
+    @objc public static let version = "0.1.0"
+
+    /// Private initializer to enforce singleton pattern
+    private override init() {
+        super.init()
+    }
+
+    /// Initialize the library
+    @objc public func initialize() {
+        // Library initialization code here
+        print("<%= className %> library initialized")
+    }
+
+    /// Example method to demonstrate functionality
+    /// - Parameter input: Input string to process
+    /// - Returns: Processed output string
+    @objc public func process(input: String) -> String {
+        return "Processed: \(input)"
+    }
+
+    /// Example async method for modern iOS development
+    /// - Parameter input: Input data to process
+    /// - Returns: Processed result
+    @available(iOS 13.0, *)
+    public func processAsync(input: String) async -> String {
+        // Simulate async work
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        return "Async processed: \(input)"
+    }
+}
+
+/// Protocol defining the public interface
+@objc public protocol <%= className %>Protocol {
+    func initialize()
+    func process(input: String) -> String
+}
+
+// MARK: - Protocol Conformance
+extension <%= className %>: <%= className %>Protocol {}
+
+/// Swift-specific convenience extensions
+public extension <%= className %> {
+
+    /// Swift-friendly method for processing arrays
+    func processArray(_ inputs: [String]) -> [String] {
+        return inputs.map { process(input: $0) }
+    }
+
+    /// Combine framework support (iOS 13+)
+    @available(iOS 13.0, *)
+    func processPublisher(input: String) -> Future<String, Never> {
+        return Future { promise in
+            Task {
+                let result = await self.processAsync(input: input)
+                promise(.success(result))
+            }
+        }
+    }
+}

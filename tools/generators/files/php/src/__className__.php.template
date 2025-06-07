@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+namespace <%= namespace %>;
+
+/**
+ * <%= className %> - <%= name %> library
+ *
+ * This class provides <%= type %> functionality for the Terrible Lizard monorepo.
+ */
+class <%= className %>
+{
+    private array $config;
+    private bool $initialized;
+
+    /**
+     * Initialize <%= className %>.
+     *
+     * @param array<string, mixed> $config Optional configuration array
+     */
+    public function __construct(array $config = [])
+    {
+        $this->config = $config;
+        $this->initialized = true;
+    }
+
+    /**
+     * Return a greeting message.
+     *
+     * @return string A greeting string from this library
+     */
+    public function hello(): string
+    {
+        return 'Hello from <%= className %>!';
+    }
+
+    /**
+     * Get information about this library.
+     *
+     * @return array<string, mixed> Array containing library metadata
+     */
+    public function getInfo(): array
+    {
+        return [
+            'name' => '<%= name %>',
+            'type' => '<%= type %>',
+            'class' => '<%= className %>',
+            'version' => '0.1.0',
+            'initialized' => $this->initialized,
+        ];
+    }
+
+    /**
+     * Process input data.
+     *
+     * This is a placeholder method that should be implemented
+     * according to the specific needs of your <%= type %> library.
+     *
+     * @param array<mixed> $data Input data to process
+     * @return array<mixed> Processed data
+     */
+    public function process(array $data): array
+    {
+        // Placeholder implementation
+        return $data;
+    }
+
+    /**
+     * Get the current configuration.
+     *
+     * @return array<string, mixed> Current configuration
+     */
+    public function getConfig(): array
+    {
+        return $this->config;
+    }
+
+    /**
+     * Update configuration.
+     *
+     * @param array<string, mixed> $config New configuration to merge
+     * @return void
+     */
+    public function updateConfig(array $config): void
+    {
+        $this->config = array_merge($this->config, $config);
+    }
+}

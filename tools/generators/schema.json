@@ -1,0 +1,54 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "$id": "CreateLib",
+    "title": "Create a Library",
+    "description": "Create a new library in the polyglot monorepo",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Library name",
+            "$default": {
+                "$source": "argv",
+                "index": 0
+            },
+            "x-prompt": "What name would you like to use for the library?"
+        },
+        "type": {
+            "type": "string",
+            "description": "Library type",
+            "enum": ["ui", "networking", "utility", "python", "php", "ios-native", "android-native"],
+            "x-prompt": {
+                "message": "What type of library is this?",
+                "type": "list",
+                "items": [
+                    { "value": "ui", "label": "UI Component Library (JS/TS)" },
+                    { "value": "networking", "label": "Networking Library" },
+                    { "value": "utility", "label": "Utility Library" },
+                    { "value": "python", "label": "Python Library" },
+                    { "value": "php", "label": "PHP Library" },
+                    { "value": "ios-native", "label": "Native iOS Library" },
+                    { "value": "android-native", "label": "Native Android Library" }
+                ]
+            }
+        },
+        "directory": {
+            "type": "string",
+            "description": "A directory where the library is placed"
+        },
+        "tags": {
+            "type": "string",
+            "description": "Add tags to the library (used for linting)"
+        },
+        "publishable": {
+            "type": "boolean",
+            "description": "Generate a publishable library",
+            "default": false
+        },
+        "importPath": {
+            "type": "string",
+            "description": "The library name used to import it (e.g. @myorg/my-awesome-lib)"
+        }
+    },
+    "required": ["name", "type"]
+}

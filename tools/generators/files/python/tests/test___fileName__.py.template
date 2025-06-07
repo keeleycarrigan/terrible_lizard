@@ -1,0 +1,73 @@
+"""
+Tests for <%= className %>
+
+This module contains unit tests for the <%= name %> library.
+"""
+
+import pytest
+from typing import Dict, Any
+
+from <%= moduleName %> import <%= className %>
+
+
+class Test<%= className %>:
+    """Test suite for <%= className %>."""
+
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.instance = <%= className %>()
+
+    def test_initialization(self):
+        """Test <%= className %> initialization."""
+        assert self.instance is not None
+        assert self.instance._initialized is True
+
+    def test_initialization_with_config(self):
+        """Test <%= className %> initialization with config."""
+        config = {"test": "value"}
+        instance = <%= className %>(config)
+        assert instance.config == config
+
+    def test_hello(self):
+        """Test hello method."""
+        result = self.instance.hello()
+        assert isinstance(result, str)
+        assert "<%= className %>" in result
+        assert result == "Hello from <%= className %>!"
+
+    def test_get_info(self):
+        """Test get_info method."""
+        info = self.instance.get_info()
+        assert isinstance(info, dict)
+        assert info["name"] == "<%= name %>"
+        assert info["type"] == "<%= type %>"
+        assert info["class"] == "<%= className %>"
+        assert info["version"] == "0.1.0"
+        assert info["initialized"] is True
+
+    def test_process_empty_list(self):
+        """Test process method with empty list."""
+        result = self.instance.process([])
+        assert result == []
+
+    def test_process_with_data(self):
+        """Test process method with data."""
+        input_data = [1, 2, 3, "test"]
+        result = self.instance.process(input_data)
+        assert result == input_data
+        assert result is not input_data  # Should be a copy
+
+    def test_process_none_input(self):
+        """Test process method with None input."""
+        result = self.instance.process(None)
+        assert result == []
+
+    @pytest.mark.parametrize("config,expected", [
+        ({}, {}),
+        ({"key": "value"}, {"key": "value"}),
+        ({"num": 42, "bool": True}, {"num": 42, "bool": True}),
+    ])
+    def test_config_handling(self, config: Dict[str, Any], expected: Dict[str, Any]):
+        """Test configuration handling with various inputs."""
+        instance = <%= className %>(config)
+        assert instance.config == expected

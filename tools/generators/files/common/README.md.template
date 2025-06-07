@@ -1,0 +1,104 @@
+# <%= className %>
+
+<%= name %> library for the Terrible Lizard monorepo.
+
+## Type
+<%= type %>
+
+## Description
+This library was generated using the custom Nx generator for polyglot library creation.
+
+<% if (type === 'python') { %>
+## Development
+
+Install dependencies:
+```bash
+nx run <%= projectName %>:install
+```
+
+Run tests:
+```bash
+nx test <%= projectName %>
+```
+
+Run linter:
+```bash
+nx lint <%= projectName %>
+```
+<% } else if (type === 'php') { %>
+## Development
+
+Install dependencies:
+```bash
+cd <%= projectRoot %>
+composer install
+```
+
+Run tests:
+```bash
+nx test <%= projectName %>
+```
+
+Run linter:
+```bash
+nx lint <%= projectName %>
+```
+<% } else if (type === 'ios-native') { %>
+## Development
+
+Build:
+```bash
+nx build <%= projectName %>
+```
+
+Run tests:
+```bash
+nx test <%= projectName %>
+```
+
+Run linter:
+```bash
+nx lint <%= projectName %>
+```
+<% } else if (type === 'android-native') { %>
+## Development
+
+Build:
+```bash
+nx build <%= projectName %>
+```
+
+Run tests:
+```bash
+nx test <%= projectName %>
+```
+
+Run linter:
+```bash
+nx lint <%= projectName %>
+```
+<% } else { %>
+## Development
+
+Build:
+```bash
+nx build <%= projectName %>
+```
+
+Run tests:
+```bash
+nx test <%= projectName %>
+```
+
+Run linter:
+```bash
+nx lint <%= projectName %>
+```
+<% } %>
+
+## Tags
+<% if (tags && tags.length > 0) { %>
+<%= tags.join(', ') %>
+<% } else { %>
+No tags specified
+<% } %>

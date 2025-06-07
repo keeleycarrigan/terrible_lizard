@@ -1,0 +1,70 @@
+import { <%= className %> } from './index';
+
+describe('<%= className %>', () => {
+  let instance: <%= className %>;
+
+  beforeEach(() => {
+    instance = new <%= className %>();
+  });
+
+  it('should be created', () => {
+    expect(instance).toBeTruthy();
+  });
+
+  it('should initialize with empty config', () => {
+    expect(instance.getConfig()).toEqual({});
+  });
+
+  it('should initialize with provided config', () => {
+    const config = { test: 'value' };
+    const instanceWithConfig = new <%= className %>(config);
+    expect(instanceWithConfig.getConfig()).toEqual(config);
+  });
+
+  it('should return greeting message', () => {
+    const result = instance.hello();
+    expect(result).toBe('Hello from <%= className %>!');
+  });
+
+  it('should return library info', () => {
+    const info = instance.getInfo();
+    expect(info).toEqual({
+      name: '<%= name %>',
+      type: '<%= type %>',
+      class: '<%= className %>',
+      version: '0.1.0',
+      initialized: true,
+    });
+  });
+
+  it('should process empty array', () => {
+    const result = instance.process([]);
+    expect(result).toEqual([]);
+  });
+
+  it('should process data array', () => {
+    const inputData = [1, 2, 3, 'test'];
+    const result = instance.process(inputData);
+    expect(result).toEqual(inputData);
+    expect(result).not.toBe(inputData); // Should be a copy
+  });
+
+  it('should update config', () => {
+    const newConfig = { key: 'value', number: 42 };
+    instance.updateConfig(newConfig);
+    expect(instance.getConfig()).toEqual(newConfig);
+  });
+
+  it('should merge config when updating', () => {
+    const initialConfig = { initial: 'value' };
+    const instanceWithConfig = new <%= className %>(initialConfig);
+
+    const additionalConfig = { additional: 'value' };
+    instanceWithConfig.updateConfig(additionalConfig);
+
+    expect(instanceWithConfig.getConfig()).toEqual({
+      ...initialConfig,
+      ...additionalConfig,
+    });
+  });
+});

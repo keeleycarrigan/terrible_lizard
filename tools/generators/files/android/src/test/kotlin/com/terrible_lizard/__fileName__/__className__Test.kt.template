@@ -1,0 +1,111 @@
+package __packageName__
+
+import kotlinx.coroutines.runBlocking
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert.*
+
+/**
+ * Unit tests for __className__
+ *
+ * Example local unit test, which will execute on the development machine (host).
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class __className__Test {
+
+    private lateinit var library: __className__
+
+    @Before
+    fun setUp() {
+        library = __className__.shared
+        library.initialize()
+    }
+
+    @Test
+    fun testLibraryVersion() {
+        assertEquals("0.1.0", __className__.VERSION)
+    }
+
+    @Test
+    fun testInitialization() {
+        assertTrue("Library should be initialized", library.isInitialized())
+    }
+
+    @Test
+    fun testSingletonPattern() {
+        val instance1 = __className__.shared
+        val instance2 = __className__.getInstance()
+
+        assertSame("Instances should be the same", instance1, instance2)
+    }
+
+    @Test
+    fun testProcess() {
+        val input = "test input"
+        val result = library.process(input)
+
+        assertEquals("Processed: test input", result)
+    }
+
+    @Test
+    fun testProcessArray() {
+        val inputs = listOf("test1", "test2", "test3")
+        val results = library.processArray(inputs)
+
+        assertEquals(3, results.size)
+        assertEquals("Processed: test1", results[0])
+        assertEquals("Processed: test2", results[1])
+        assertEquals("Processed: test3", results[2])
+    }
+
+    @Test
+    fun testProcessAsync() = runBlocking {
+        val input = "async test"
+        val result = library.processAsync(input)
+
+        assertEquals("Async processed: async test", result)
+    }
+
+    @Test
+    fun testProcessNullable() {
+        val result1 = library.processNullable("test")
+        val result2 = library.processNullable(null)
+
+        assertEquals("Processed: test", result1)
+        assertNull(result2)
+    }
+
+    @Test
+    fun testBuilderPattern() {
+        val builtLibrary = __fileName__ {
+            autoInitialize(true)
+        }
+
+        assertTrue("Built library should be initialized", builtLibrary.isInitialized())
+        assertSame("Built library should be same instance", library, builtLibrary)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testProcessWithoutInitialization() {
+        val uninitializedLib = __className__Builder()
+            .autoInitialize(false)
+            .build()
+
+        uninitializedLib.process("test") // Should throw exception
+    }
+
+    @Test
+    fun testProcessAsyncJava() {
+        var result: String? = null
+        val countDownLatch = java.util.concurrent.CountDownLatch(1)
+
+        library.processAsyncJava("java async test") {
+            result = it
+            countDownLatch.countDown()
+        }
+
+        assertTrue("Callback should complete within 1 second",
+            countDownLatch.await(1, java.util.concurrent.TimeUnit.SECONDS))
+        assertEquals("Async processed: java async test", result)
+    }
+}
